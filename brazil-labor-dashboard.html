@@ -68,6 +68,18 @@ tbody td{padding:7px 10px;border-bottom:1px solid #edf0f4;vertical-align:middle}
 .pbar-wrap{background:#f0f2f5;border-radius:4px;height:10px;min-width:80px;display:inline-block;vertical-align:middle}
 .pbar-fill{background:#4589ff;height:10px;border-radius:4px}
 footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1px solid #e5e7eb;margin-top:20px}
+/* ── Legend bar ── */
+.legend-wrap{background:#1f1f1f;border-top:1px solid #2e2e2e}
+.legend-toggle{display:flex;align-items:center;gap:6px;padding:5px 24px;cursor:pointer;color:#a8b0bb;font-size:11px;font-weight:600;letter-spacing:.4px;user-select:none;background:none;border:none;width:100%}
+.legend-toggle:hover{color:#fff}
+.legend-toggle .arr{font-size:9px;transition:transform .2s}
+.legend-wrap.expanded .legend-toggle .arr{transform:rotate(180deg)}
+.legend-bar{overflow:hidden;transition:max-height .25s ease;max-height:0}
+.legend-wrap.expanded .legend-bar{max-height:200px}
+.legend-content{display:flex;flex-wrap:wrap;gap:6px 20px;padding:4px 24px 10px;border-top:1px solid #2e2e2e}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#a8b0bb;white-space:nowrap}
+.leg-item b{color:#fff;font-weight:700}
+.leg-sep{width:1px;height:14px;background:#3a3a3a;flex-shrink:0}
 @media(max-width:860px){.row.c2,.row.c3{grid-template-columns:1fr}}
 /* ── AI Q&A ── */
 .ai-shell{display:flex;flex-direction:column;gap:16px;max-width:900px;margin:0 auto}
@@ -128,6 +140,40 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <button onclick="nav('projects')">Projects &amp; Managers</button>
   <button onclick="nav('ai-ask')">&#129302; Ask AI</button>
 </nav>
+
+<!-- Acronym Legend Bar -->
+<div class="legend-wrap" id="legend-bar">
+  <button class="legend-toggle" onclick="toggleLegend()" title="Show / hide acronym legend">
+    <span class="arr">&#9660;</span> ACRONYM LEGEND
+  </button>
+  <div class="legend-bar">
+    <div class="legend-content">
+      <div class="leg-item"><b>AH</b> Additional Hours</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>RBW</b> Rest Between Workdays</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>CONS</b> Consecutive Days</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>HC</b> Headcount</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>Cat 1-2</b> 1–2 occurrences / month <span style="color:#57606a">(≤10% target)</span></div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>Cat 3-10</b> 3–10 occurrences / month <span style="color:#57606a">(≤5% target)</span></div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>Cat 11-20</b> 11–20 occurrences / month <span style="color:#57606a">(≤0.5% target)</span></div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>Cat 21+</b> ≥21 occurrences / month <span style="color:#da1e28">(zero tolerance)</span></div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>Exc</b> Excessive — worked &gt;12 h total in a day</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>Wknd</b> Weekend / Holiday violation (&gt;8 h on a day with no expected hours)</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>TW</b> Tower (team / practice group)</div>
+      <div class="leg-sep"></div>
+      <div class="leg-item"><b>MgrNorm</b> Manager intranet ID</div>
+    </div>
+  </div>
+</div>
 
 <!-- TAB 1: Executive Summary -->
 <div id="executive" class="page active">
@@ -1378,6 +1424,13 @@ function aiInputKeydown(e) {
     ta.style.height = '46px';
     ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
   }, 0);
+}
+
+// ─── LEGEND TOGGLE ───────────────────────────────────────────────────────────
+function toggleLegend(){
+  const wrap=document.getElementById('legend-bar');
+  if(!wrap) return;
+  wrap.classList.toggle('expanded');
 }
 
 // ─── BOOT ────────────────────────────────────────────────────────────────────
