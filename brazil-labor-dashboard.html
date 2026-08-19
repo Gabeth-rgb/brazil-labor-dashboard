@@ -476,17 +476,19 @@ const SVG={
     if(!container) return;
     const{labels,series,target}=opts;
     const W=600,H=260;
-    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
-    const mL=44,mR=20,mT=20,mB=44;
+    // extra top margin when showing data labels to avoid clipping
+    const mL=44,mR=20,mT=28,mB=44;
     const cW=W-mL-mR,cH=H-mT-mB;
 
     let maxVal=0;
     series.forEach(sr=>sr.data.forEach(v=>{ if((v||0)>maxVal) maxVal=v||0; }));
     if(target && target>maxVal) maxVal=target;
-    maxVal=maxVal*1.12||1;
+    maxVal=maxVal*1.15||1; // slightly more headroom for labels
 
     const n=labels.length;
     const xStep=cW/(n-1||1);
+
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
 
     // gridlines
     for(let i=0;i<=4;i++){
@@ -514,10 +516,21 @@ const SVG={
       const linePts=pts.map(p=>`${p[0]},${p[1]}`).join(' ');
       el('polyline',{points:linePts,fill:'none',stroke:color,'stroke-width':2,'stroke-linejoin':'round'},svg);
       pts.forEach(([x,y],i)=>{
+        const v=sr.data[i];
+        if(v==null) return;
         const c=el('circle',{cx:x,cy:y,r:3,fill:color},svg);
         const title=document.createElementNS(NS,'title');
-        title.textContent=`${sr.label} ${labels[i]}: ${sr.data[i]}`;
+        title.textContent=`${sr.label} ${labels[i]}: ${v}`;
         c.appendChild(title);
+        // data label above the point
+        // stagger odd/even series slightly so labels don't stack on same x
+        const labelY=y-(si%2===0?7:15);
+        svgText(svg,x,labelY,v,{
+          'text-anchor':'middle',
+          'font-size':'8.5',
+          'font-weight':'600',
+          'fill':color,
+        });
       });
     });
 
