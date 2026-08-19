@@ -142,7 +142,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 </nav>
 
 <!-- Acronym Legend Bar -->
-<div class="legend-wrap" id="legend-bar">
+<div class="legend-wrap expanded" id="legend-bar">
   <button class="legend-toggle" onclick="toggleLegend()" title="Show / hide acronym legend">
     <span class="arr">&#9660;</span> ACRONYM LEGEND
   </button>
@@ -166,7 +166,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <div class="leg-sep"></div>
       <div class="leg-item"><b>Exc</b> Excessive — worked &gt;12 h total in a day</div>
       <div class="leg-sep"></div>
-      <div class="leg-item"><b>Wknd</b> Weekend / Holiday violation (&gt;8 h on a day with no expected hours)</div>
+      <div class="leg-item"><b>Wknd</b> Weekend &amp; Holiday violation (any row flagged as "Issue" in the Weekend&amp;Holidays column)</div>
       <div class="leg-sep"></div>
       <div class="leg-item"><b>TW</b> Tower (team / practice group)</div>
       <div class="leg-sep"></div>
@@ -198,7 +198,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     <div class="card"><h3>Total Excess Hours per Month</h3><div id="ch-ah-exhrs" class="ch tall"></div></div>
   </div>
   <div class="row c2">
-    <div class="card"><h3>Weekend Violations per Month</h3><div id="ch-ah-wknd" class="ch"></div></div>
+    <div class="card"><h3>Weekend &amp; Holiday Violations per Month</h3><div id="ch-ah-wknd" class="ch"></div></div>
     <div class="card"><h3>Excessive (&gt;12h) Events per Month</h3><div id="ch-ah-exc" class="ch"></div></div>
   </div>
   <div class="row c1">
@@ -232,7 +232,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     </div>
     <div class="rc" id="flt-rc" style="margin-bottom:8px"></div>
     <div class="ts"><table id="tbl-filtered">
-      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th>Total</th><th>≤15min</th><th>&gt;15min</th><th>Excessive</th><th>Weekend</th><th>Category</th></tr></thead>
+      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th>Total</th><th>≤15min</th><th>&gt;15min</th><th>Excessive</th><th>Wknd+Hol</th><th>Category</th></tr></thead>
       <tbody id="tbl-filtered-body"></tbody>
     </table></div>
   </div>
@@ -699,7 +699,7 @@ function buildExecutive(){
     kpi(null,pct(avgPct),'Avg % HC with AH','Months with HC data','yellow')+
     kpi(null,pct(maxPct),'Peak AH Rate','Sep/25','red')+
     kpi(null,totalExc,'Total Excessive (>12h) Events','Across all months','red')+
-    kpi(null,totalWknd,'Total Weekend Violations','','yellow')+
+    kpi(null,totalWknd,'Total Weekend+Holiday Violations','','yellow')+
     kpi(null,totalRBWUnique,'Total RBW Unique Persons','Rest violations','red')+
     kpi(null,totalConsUnique,'Total Consecutive Unique','Day violations','')+
     kpi(null,totalMH+'h','Total Missing Rest Hours','RBW deficit','yellow');
@@ -735,13 +735,13 @@ function buildExecutive(){
   const months12=M;
   let html='<thead><tr><th>Category</th>'+months12.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
   const rows=[
-    {label:'AH % HC',data:AH.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[10,15,20],cls:v=>v==null?'':v>20?'bc red':v>15?'bc yellow':'bc green'},
-    {label:'Cat 1-2 % HC',data:AH.map(r=>r.p12),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[8,12,16],cls:v=>v==null?'':v>16?'bc red':v>12?'bc yellow':'bc green'},
+    {label:'AH % HC',data:AH.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[10,15,20],cls:v=>v==null?'':v>20?'bc red':v>15?'bc yellow':v>10?'bc yellow':'bc green'},
+    {label:'Cat 1-2 % HC',data:AH.map(r=>r.p12),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[8,12,16],cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
     {label:'Cat 3-10 % HC',data:AH.map(r=>r.p310),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[3,5,7],cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
-    {label:'Cat 11-20 % HC',data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%',thr:[0.3,0.6,1],cls:v=>v==null?'':v>1?'bc red':v>0.6?'bc yellow':'bc green'},
-    {label:'Weekend Viol.',data:AH.map(r=>r.wknd),fmt:v=>v,thr:[30,50,80],cls:v=>v>80?'bc red':v>50?'bc yellow':'bc green'},
-    {label:'RBW % HC',data:RBW.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[4,6,9],cls:v=>v==null?'':v>9?'bc red':v>6?'bc yellow':'bc green'},
-    {label:'Cons. Unique',data:CONS.map(r=>r.unique),fmt:v=>v,thr:[20,35,45],cls:v=>v>45?'bc red':v>35?'bc yellow':'bc green'},
+    {label:'Cat 11-20 % HC',data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%',thr:[0.3,0.6,1],cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
+    {label:'Wknd+Hol Viol.',data:AH.map(r=>r.wknd),fmt:v=>v,thr:[30,50,80],cls:v=>v>0?'bc red':'bc green'},
+    {label:'RBW % HC',data:RBW.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[4,6,9],cls:v=>v==null?'':v>4?'bc red':'bc green'},
+    {label:'Cons. Unique',data:CONS.map(r=>r.unique),fmt:v=>v,thr:[20,35,45],cls:v=>v>0?'bc red':'bc green'},
   ];
   rows.forEach(row=>{
     html+=`<tr><td style="font-weight:600">${row.label}</td>`+row.data.map(v=>`<td><span class="${row.cls(v)}">${row.fmt(v)}</span></td>`).join('')+'</tr>';
@@ -765,7 +765,7 @@ function buildAdditional(){
     kpi(null,totalOcc,'Total Person-Months with AH','','red')+
     kpi(null,totalExHrs+'h','Total Excess Hours','','red')+
     kpi(null,totalExc,'Total Excessive (>12h)','Events','red')+
-    kpi(null,totalWknd,'Total Weekend Violations','','yellow')+
+    kpi(null,totalWknd,'Total Weekend+Holiday Violations','','yellow')+
     kpi(null,totalC12,'Cat 1-2 Person-Months','1-2 occurrences','')+
     kpi(null,totalC310,'Cat 3-10 Person-Months','3-10 occurrences','yellow')+
     kpi(null,totalC1120,'Cat 11-20 Person-Months','11-20 occurrences','red')+
@@ -789,10 +789,10 @@ function buildAdditional(){
     series:[{label:'Excess Hours',data:AH.map(r=>r.exHrs),color:'#8a3ffc'}]
   });
 
-  // Weekend
+  // Weekend & Holiday
   SVG.bar('ch-ah-wknd',{
     labels:M,
-    series:[{label:'Weekend Violations',data:AH.map(r=>r.wknd),color:'#f1c21b'}]
+    series:[{label:'Weekend+Holiday Violations',data:AH.map(r=>r.wknd),color:'#f1c21b'}]
   });
 
   // Excessive >12h
@@ -803,7 +803,7 @@ function buildAdditional(){
 
   // Detail table
   const tbl=document.getElementById('tbl-ah-detail');
-  let html='<thead><tr><th>Month</th><th>HC</th><th>Persons</th><th>% HC</th><th>Cat 1-2</th><th>Cat 3-10</th><th>Cat 11-20</th><th>Cat 21+</th><th>Weekend</th><th>Excess Hrs</th><th>>12h Events</th></tr></thead><tbody>';
+  let html='<thead><tr><th>Month</th><th>HC</th><th>Persons</th><th>% HC</th><th>Cat 1-2</th><th>Cat 3-10</th><th>Cat 11-20</th><th>Cat 21+</th><th>Wknd+Hol</th><th>Excess Hrs</th><th>>12h Events</th></tr></thead><tbody>';
   AH.forEach((r,i)=>{
     const cls=r.pct==null?'':r.pct>20?'bc red':r.pct>15?'bc yellow':'bc green';
     html+=`<tr><td><strong>${M[i]}</strong></td><td>${r.hc||'—'}</td><td>${r.persons}</td>
@@ -1110,7 +1110,7 @@ function buildOffenders(){
 
   // Detail table
   const tbl=document.getElementById('tbl-top-ah');
-  let html='<thead><tr><th>#</th><th>Employee</th><th>Project</th><th>Manager</th><th>Total</th><th>Months</th><th>Excessive</th><th>Weekend</th><th>Risk</th></tr></thead><tbody>';
+  let html='<thead><tr><th>#</th><th>Employee</th><th>Project</th><th>Manager</th><th>Total</th><th>Months</th><th>Excessive</th><th>Wknd+Hol</th><th>Risk</th></tr></thead><tbody>';
   TOP_AH.forEach((r,i)=>{
     const risk=r.t>=100?badge('red','CRITICAL'):r.t>=70?badge('red','HIGH'):r.t>=50?badge('yellow','MEDIUM'):badge('blue','LOW');
     html+=`<tr><td>${i+1}</td><td><strong>${r.n}</strong></td><td>${r.p}</td><td style="font-size:11px">${r.m}</td>
@@ -1141,7 +1141,7 @@ function buildProjects(){
   });
 
   const tbl=document.getElementById('tbl-proj-detail');
-  let html='<thead><tr><th>Project</th><th>TW</th><th>AH Occurrences</th><th>Excessive</th><th>Weekend</th><th>Unique Persons</th><th>Exc Rate</th></tr></thead><tbody>';
+  let html='<thead><tr><th>Project</th><th>TW</th><th>AH Occurrences</th><th>Excessive</th><th>Wknd+Hol</th><th>Unique Persons</th><th>Exc Rate</th></tr></thead><tbody>';
   PROJECTS.forEach(r=>{
     const excRate=(r.occ>0?((r.exc/r.occ)*100).toFixed(1):'0')+'%';
     const cls=parseFloat(excRate)>30?'bc red':parseFloat(excRate)>20?'bc yellow':'bc green';
@@ -1173,7 +1173,7 @@ function aiBuildContext() {
   ctx += `- Additional Hours Cat 3-10 (3-10 occurrences/month): ≤5% of eligible HC\n`;
   ctx += `- Additional Hours Cat 11-20 (11-20 occurrences/month): ≤0.5% of eligible HC\n`;
   ctx += `- Additional Hours Cat 21+ (≥21 occurrences/month): ZERO TOLERANCE\n`;
-  ctx += `- Weekend/Holiday work >8h: ZERO TOLERANCE\n`;
+  ctx += `- Weekend/Holiday work (Weekend&Holidays = "Issue"): ZERO TOLERANCE\n`;
   ctx += `- Consecutive days >6: ZERO TOLERANCE\n`;
   ctx += `- Rest Between Workdays <11h: ≤4% of eligible HC\n\n`;
 
@@ -1212,7 +1212,7 @@ function aiBuildContext() {
 
   // ── Top 15 AH offenders ──────────────────────────────────────────────────
   ctx += `### Top 15 Additional Hours Offenders (all-time)\n`;
-  ctx += `Rank | Employee | Project | Manager | Total Occurrences | Months Active | Excessive(>12h) | Weekend Violations\n`;
+  ctx += `Rank | Employee | Project | Manager | Total Occurrences | Months Active | Excessive(>12h) | Weekend+Holiday Violations\n`;
   TOP_AH.forEach((r,i) => {
     ctx += `${i+1} | ${r.n} | ${r.p} | ${r.m} | ${r.t} | ${r.mo} | ${r.ex} | ${r.wk}\n`;
   });
@@ -1236,7 +1236,7 @@ function aiBuildContext() {
 
   // ── Projects ─────────────────────────────────────────────────────────────
   ctx += `### Top 15 Projects by AH Occurrences\n`;
-  ctx += `Project | Tower/Team | AH Occurrences | Excessive(>12h) | Weekend Violations | Unique Persons Affected\n`;
+  ctx += `Project | Tower/Team | AH Occurrences | Excessive(>12h) | Weekend+Holiday Violations | Unique Persons Affected\n`;
   PROJECTS.forEach(r => {
     ctx += `${r.p} | ${r.tw} | ${r.occ} | ${r.exc} | ${r.wk} | ${r.per}\n`;
   });
