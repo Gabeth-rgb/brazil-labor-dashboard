@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brazil Labor Hours — Compliance Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;background:#f0f2f5;color:#1f2328;font-size:14px}
+header{background:#161616;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+header h1{font-size:17px;font-weight:600}
+header .hbadge{background:#da1e28;color:#fff;border-radius:4px;padding:3px 10px;font-size:11px;font-weight:700}
+nav{display:flex;gap:4px;background:#1f1f1f;padding:0 24px;overflow-x:auto}
+nav button{background:none;border:none;color:#a8b0bb;padding:11px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap;transition:.15s}
+nav button.active{color:#fff;border-bottom-color:#4589ff}
+nav button:hover:not(.active){color:#ccc}
+.page{display:none;padding:20px 24px}
+.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:8px;padding:16px 18px;border-left:4px solid #4589ff;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.kpi.red{border-left-color:#da1e28}.kpi.yellow{border-left-color:#f1c21b}.kpi.green{border-left-color:#24a148}
+.kpi .val{font-size:26px;font-weight:700;line-height:1.1;margin-bottom:3px}
+.kpi .lbl{font-size:12px;color:#57606a;font-weight:500}
+.kpi .sub{font-size:11px;color:#8a9099;margin-top:3px}
+.row{display:grid;gap:14px;margin-bottom:16px}
+.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:1fr 1fr 1fr}.row.c1{grid-template-columns:1fr}
+.card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.card h3{font-size:13px;font-weight:600;margin-bottom:12px;color:#1f2328;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px}
+.pill.red{background:#fff1f1;color:#da1e28}.pill.yellow{background:#fef9e7;color:#b28600}
+.pill.green{background:#defbe6;color:#198038}.pill.blue{background:#edf5ff;color:#0043ce}
+.ch{width:100%;height:280px}
+.ch.tall{height:340px}
+.ch.short{height:220px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#f7f8fa;font-weight:600;padding:8px 10px;text-align:left;border-bottom:2px solid #e5e7eb;white-space:nowrap}
+tbody tr:hover{background:#f7f9ff}
+tbody td{padding:7px 10px;border-bottom:1px solid #edf0f4;vertical-align:middle}
+.ts{max-height:320px;overflow-y:auto;border-radius:6px;border:1px solid #e5e7eb}
+.bc{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.bc.red{background:#fff1f1;color:#da1e28}.bc.yellow{background:#fef9e7;color:#b28600}
+.bc.green{background:#defbe6;color:#198038}.bc.blue{background:#edf5ff;color:#0043ce}
+.hbox{border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.65;border-left:4px solid}
+.hbox.crit{background:#fff1f1;border-color:#da1e28;color:#5c1010}
+.hbox.warn{background:#fef9e7;border-color:#f1c21b;color:#5a4100}
+.hbox.ok{background:#defbe6;border-color:#24a148;color:#0a3d1f}
+.hbox strong{display:block;font-weight:700;margin-bottom:3px}
+.sec{font-size:15px;font-weight:700;margin-bottom:14px;margin-top:6px;border-left:3px solid #4589ff;padding-left:9px}
+.sub-tab-bar{display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:18px}
+.sub-tab-bar button{background:none;border:none;padding:9px 18px;font-size:13px;font-weight:500;color:#57606a;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:.15s}
+.sub-tab-bar button.active{color:#1f2328;border-bottom-color:#4589ff;font-weight:600}
+.sub-page{display:none}.sub-page.active{display:block}
+.fr{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.fr label{font-size:12px;font-weight:600;color:#57606a}
+.fr select,.fr input{padding:6px 10px;border:1px solid #dde1e7;border-radius:6px;font-size:13px;background:#fff}
+.fr input{width:230px}
+.rc{font-size:12px;color:#57606a}
+.matrix-wrap{overflow:auto;max-height:480px;border:1px solid #e5e7eb;border-radius:6px}
+.mt{border-collapse:collapse;font-size:11px;white-space:nowrap}
+.mt th,.mt td{padding:5px 9px;border-bottom:1px solid #edf0f4;border-right:1px solid #edf0f4}
+.mt thead th{background:#f7f8fa;font-weight:600;position:sticky;top:0;z-index:2}
+.mt thead th:first-child{position:sticky;left:0;z-index:3;background:#f7f8fa}
+.mt tbody td:first-child{position:sticky;left:0;background:#fff;font-weight:600;z-index:1}
+.mt tbody tr:hover td{background:#f7f9ff}
+.c0{color:#c0c8d0}.c1{background:#fff9e6;color:#5a4100}.c2,.c3{background:#fff1e6;color:#7a3500}
+.c4,.c5,.c6,.c7,.c8,.c9,.c10{background:#ffe2e2;color:#8b0000}
+.chi{background:#da1e28;color:#fff;font-weight:700;border-radius:3px;padding:1px 3px}
+.pbar-wrap{background:#f0f2f5;border-radius:4px;height:10px;min-width:80px;display:inline-block;vertical-align:middle}
+.pbar-fill{background:#4589ff;height:10px;border-radius:4px}
+footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1px solid #e5e7eb;margin-top:20px}
+@media(max-width:860px){.row.c2,.row.c3{grid-template-columns:1fr}}
+/* ── AI Q&A ── */
+.ai-shell{display:flex;flex-direction:column;gap:16px;max-width:900px;margin:0 auto}
+.ai-config{background:#fff;border-radius:8px;padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.ai-config label{font-size:12px;font-weight:600;color:#57606a;display:block;margin-bottom:4px}
+.ai-config input,.ai-config select{padding:7px 11px;border:1px solid #dde1e7;border-radius:6px;font-size:13px;background:#fff;color:#1f2328}
+.ai-config input{width:260px}
+.ai-config .cfg-status{font-size:11px;margin-top:2px}
+.ai-cfg-btn{padding:7px 18px;border-radius:6px;border:none;background:#4589ff;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.ai-cfg-btn:hover{background:#2a6dd9}
+.ai-cfg-btn.secondary{background:#f0f2f5;color:#1f2328}
+.ai-cfg-btn.secondary:hover{background:#e0e4ea}
+.ai-chat{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;flex-direction:column;min-height:480px}
+.ai-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;min-height:360px;max-height:540px}
+.ai-msg{max-width:82%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.65}
+.ai-msg.user{align-self:flex-end;background:#4589ff;color:#fff;border-bottom-right-radius:4px}
+.ai-msg.assistant{align-self:flex-start;background:#f7f8fa;color:#1f2328;border:1px solid #e5e7eb;border-bottom-left-radius:4px}
+.ai-msg.system{align-self:center;color:#8a9099;font-size:11px;font-style:italic;background:none;border:none;padding:4px 0}
+.ai-msg.error{background:#fff1f1;border:1px solid #ffa0a0;color:#8b0000}
+.ai-msg ul,.ai-msg ol{padding-left:18px;margin:6px 0}
+.ai-msg li{margin-bottom:3px}
+.ai-msg strong{font-weight:700}
+.ai-msg em{font-style:italic}
+.ai-msg code{background:#e8eaf0;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px}
+.ai-msg pre{background:#1f2328;color:#e4e8ef;padding:10px 14px;border-radius:6px;overflow-x:auto;margin:6px 0;font-size:12px}
+.ai-msg blockquote{border-left:3px solid #4589ff;padding-left:10px;color:#57606a;margin:6px 0}
+.ai-typing{align-self:flex-start;background:#f7f8fa;border:1px solid #e5e7eb;border-radius:12px;border-bottom-left-radius:4px;padding:12px 18px;font-size:13px;color:#8a9099;display:none}
+.ai-typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8a9099;margin:0 2px;animation:aiBounce 1s infinite}
+.ai-typing span:nth-child(2){animation-delay:.2s}
+.ai-typing span:nth-child(3){animation-delay:.4s}
+@keyframes aiBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.ai-input-row{display:flex;gap:8px;padding:14px 16px;border-top:1px solid #e5e7eb}
+.ai-input-row textarea{flex:1;padding:9px 13px;border:1px solid #dde1e7;border-radius:8px;font-size:13px;font-family:inherit;resize:none;height:46px;min-height:46px;max-height:140px;line-height:1.5;overflow-y:hidden}
+.ai-input-row textarea:focus{outline:none;border-color:#4589ff;box-shadow:0 0 0 2px rgba(69,137,255,.2)}
+.ai-send-btn{padding:0 18px;border-radius:8px;border:none;background:#4589ff;color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.ai-send-btn:disabled{background:#c0c8d0;cursor:not-allowed}
+.ai-send-btn:not(:disabled):hover{background:#2a6dd9}
+.ai-suggestions{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 14px}
+.ai-suggestions button{background:#edf5ff;border:1px solid #c8d9f5;color:#0043ce;border-radius:16px;padding:5px 13px;font-size:12px;cursor:pointer}
+.ai-suggestions button:hover{background:#d0e6ff}
+.ai-badge-offline{background:#f0f2f5;color:#57606a;border:1px solid #dde1e7;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+.ai-badge-online{background:#defbe6;color:#198038;border:1px solid #a7f0ba;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600}
+</style>
+<script src="brazil-labor-data.js"></script>
+</head>
+<body>
+<header>
+  <h1>&#9878;&#65039; Brazil Labor Hours — Compliance Dashboard</h1>
+  <span class="hbadge">Aug 2025 – Jul 2026</span>
+</header>
+<nav>
+  <button class="active" onclick="nav('executive')">Executive Summary</button>
+  <button onclick="nav('additional')">Additional Hours</button>
+  <button onclick="nav('ah-analysis')">AH Analysis</button>
+  <button onclick="nav('consecutive')">Consecutive Days</button>
+  <button onclick="nav('rest')">Rest Between Workdays</button>
+  <button onclick="nav('offenders')">Top Offenders</button>
+  <button onclick="nav('projects')">Projects &amp; Managers</button>
+  <button onclick="nav('ai-ask')">&#129302; Ask AI</button>
+</nav>
+
+<!-- TAB 1: Executive Summary -->
+<div id="executive" class="page active">
+  <div class="kpi-grid" id="exec-kpis"></div>
+  <div class="row c2">
+    <div class="card"><h3>Persons with AH per Month &amp; % of HC <span class="pill blue">10% target</span></h3><div id="ch-exec-ah" class="ch"></div></div>
+    <div class="card"><h3>Monthly Persons: AH / Consecutive / RBW</h3><div id="ch-exec-multi" class="ch"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card">
+      <h3>Compliance Heatmap — Monthly Status by Category</h3>
+      <div class="ts"><table id="tbl-heatmap"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: Additional Hours -->
+<div id="additional" class="page">
+  <div class="kpi-grid" id="ah-kpis"></div>
+  <div class="row c2">
+    <div class="card"><h3>Cat 1–2 / Cat 3–10 / Cat 11+ % of HC <span class="pill blue">target lines</span></h3><div id="ch-ah-cat" class="ch tall"></div></div>
+    <div class="card"><h3>Total Excess Hours per Month</h3><div id="ch-ah-exhrs" class="ch tall"></div></div>
+  </div>
+  <div class="row c2">
+    <div class="card"><h3>Weekend Violations per Month</h3><div id="ch-ah-wknd" class="ch"></div></div>
+    <div class="card"><h3>Excessive (&gt;12h) Events per Month</h3><div id="ch-ah-exc" class="ch"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card">
+      <h3>Additional Hours — Monthly Detail</h3>
+      <div class="ts"><table id="tbl-ah-detail"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: AH Analysis -->
+<div id="ah-analysis" class="page">
+  <div class="sub-tab-bar">
+    <button class="active" onclick="subNav('ah','filtered')">Filtered Case View</button>
+    <button onclick="subNav('ah','matrix')">Employee × Month Matrix</button>
+    <button onclick="subNav('ah','split')">≤15min vs &gt;15min Split</button>
+  </div>
+
+  <!-- Sub-tab A: Filtered Case View -->
+  <div id="ah-filtered" class="sub-page active">
+    <div id="emp-loader" style="display:none;padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading employee data (0/5)…</div>
+    <div class="fr" id="filt-bar" style="display:none">
+      <label>Project</label>
+      <select id="flt-proj"><option value="">All Projects</option></select>
+      <label>Manager</label>
+      <select id="flt-mgr"><option value="">All Managers</option></select>
+      <label>Month</label>
+      <select id="flt-mon"><option value="">All Months</option></select>
+      <label>Employee</label>
+      <input id="flt-name" type="text" placeholder="Search name…" oninput="renderFiltered()">
+    </div>
+    <div class="rc" id="flt-rc" style="margin-bottom:8px"></div>
+    <div class="ts"><table id="tbl-filtered">
+      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th>Total</th><th>≤15min</th><th>&gt;15min</th><th>Excessive</th><th>Weekend</th><th>Category</th></tr></thead>
+      <tbody id="tbl-filtered-body"></tbody>
+    </table></div>
+  </div>
+
+  <!-- Sub-tab B: Matrix -->
+  <div id="ah-matrix" class="sub-page">
+    <div class="fr" id="mat-filt-bar">
+      <label>Project</label>
+      <select id="mat-proj"><option value="">All Projects</option></select>
+      <label>Manager</label>
+      <select id="mat-mgr"><option value="">All Managers</option></select>
+      <label>Employee</label>
+      <input id="mat-name" type="text" placeholder="Search name…" oninput="renderMatrix()">
+    </div>
+    <div class="rc" id="mat-rc" style="margin-bottom:8px"></div>
+    <div class="matrix-wrap"><table class="mt" id="tbl-matrix"></table></div>
+  </div>
+
+  <!-- Sub-tab C: Split -->
+  <div id="ah-split" class="sub-page">
+    <div class="row c2">
+      <div class="card"><h3>≤15min vs &gt;15min Events by Month</h3><div id="ch-split-bar" class="ch"></div></div>
+      <div class="card"><h3>% ≤15min by Month</h3><div id="ch-split-pct" class="ch"></div></div>
+    </div>
+    <div class="row c1">
+      <div class="card"><h3>Stacked by Project — ≤15min (yellow) vs &gt;15min (red)</h3><div id="ch-split-proj" class="ch tall"></div></div>
+    </div>
+    <div class="row c1">
+      <div class="card">
+        <h3>≤15min Split by Project</h3>
+        <div class="ts"><table id="tbl-split-proj"></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: Consecutive Days -->
+<div id="consecutive" class="page">
+  <div class="kpi-grid" id="cons-kpis"></div>
+  <div class="row c2">
+    <div class="card"><h3>Persons with Consecutive Violations per Month</h3><div id="ch-cons-line" class="ch"></div></div>
+    <div class="card"><h3>Total vs Unique Occurrences per Month</h3><div id="ch-cons-bar" class="ch"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card">
+      <h3>Consecutive Days — Monthly Detail</h3>
+      <div class="ts"><table id="tbl-cons-detail"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 5: Rest Between Workdays -->
+<div id="rest" class="page">
+  <div class="kpi-grid" id="rbw-kpis"></div>
+  <div class="row c2">
+    <div class="card"><h3>% of HC with RBW Violations <span class="pill red">4% target</span></h3><div id="ch-rbw-pct" class="ch"></div></div>
+    <div class="card"><h3>Missing Rest Hours per Month</h3><div id="ch-rbw-mh" class="ch"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card">
+      <h3>Rest Between Workdays — Monthly Detail</h3>
+      <div class="ts"><table id="tbl-rbw-detail"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 6: Top Offenders -->
+<div id="offenders" class="page">
+  <div class="row c2">
+    <div class="card"><h3>Top 15 AH Offenders — Total Occurrences</h3><div id="ch-top-ah" class="ch tall"></div></div>
+    <div class="card"><h3>Top 15 Consecutive Day Offenders</h3><div id="ch-top-cons" class="ch tall"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card"><h3>Top 15 RBW Offenders — Events &amp; Missing Hours</h3><div id="ch-top-rbw" class="ch tall"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card">
+      <h3>Top 15 AH Offenders — Detail with Risk</h3>
+      <div class="ts"><table id="tbl-top-ah"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 7: Projects & Managers -->
+<div id="projects" class="page">
+  <div class="row c2">
+    <div class="card"><h3>Top 15 Projects — AH Occurrences</h3><div id="ch-proj" class="ch tall"></div></div>
+    <div class="card"><h3>Top 12 Managers — AH Occurrences</h3><div id="ch-mgr" class="ch tall"></div></div>
+  </div>
+  <div class="row c1">
+    <div class="card">
+      <h3>Projects — Detail Table</h3>
+      <div class="ts"><table id="tbl-proj-detail"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 8: Ask AI -->
+<div id="ai-ask" class="page">
+  <div class="ai-shell">
+
+    <!-- Configuration card -->
+    <div class="ai-config" id="ai-cfg-card">
+      <div>
+        <label for="ai-server-url">Proxy server URL</label>
+        <input id="ai-server-url" value="http://localhost:3031" placeholder="http://localhost:3031">
+        <div class="cfg-status" id="ai-server-status"></div>
+      </div>
+      <div style="flex:1">
+        <label>&nbsp;</label>
+        <div style="display:flex;gap:8px">
+          <button class="ai-cfg-btn" onclick="aiCheckServer()">Test connection</button>
+          <button class="ai-cfg-btn secondary" onclick="aiClearChat()">Clear chat</button>
+          <span id="ai-conn-badge" class="ai-badge-offline">Offline</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#8a9099;width:100%;padding-top:4px">
+        Run <code style="background:#f0f2f5;padding:1px 5px;border-radius:3px">node brazil-labor-ai-server.mjs</code> first, then press <strong>Test connection</strong>.
+        The server reads your <code style="background:#f0f2f5;padding:1px 5px;border-radius:3px">.env</code> file for the watsonx.ai credentials — your API key never touches this page.
+      </div>
+    </div>
+
+    <!-- Chat window -->
+    <div class="ai-chat">
+      <div class="ai-messages" id="ai-messages">
+        <div class="ai-msg system">Connect the proxy server above to start asking questions about your Brazil labor compliance data.</div>
+      </div>
+      <div class="ai-typing" id="ai-typing"><span></span><span></span><span></span></div>
+
+      <!-- Suggested questions -->
+      <div class="ai-suggestions" id="ai-suggestions">
+        <button onclick="aiAsk('What are the top compliance risks this month?')">Top risks this month</button>
+        <button onclick="aiAsk('Which project has the most additional hours violations?')">Worst project for AH</button>
+        <button onclick="aiAsk('How is the rest between workdays trend evolving over time?')">RBW trend</button>
+        <button onclick="aiAsk('Who are the top 5 repeat offenders for additional hours?')">Top 5 repeat offenders</button>
+        <button onclick="aiAsk('Are we breaching any compliance targets? Give me a summary.')">Target breach summary</button>
+        <button onclick="aiAsk('What percentage of violations are just 15 minutes or less over the limit?')">≤15 min excess share</button>
+        <button onclick="aiAsk('Which manager has the highest number of people with excessive hours?')">Manager with most excess</button>
+        <button onclick="aiAsk('Give me an executive summary I can share with leadership.')">Executive summary</button>
+      </div>
+
+      <div class="ai-input-row">
+        <textarea id="ai-input" placeholder="Ask anything about your labor compliance data…" onkeydown="aiInputKeydown(event)"></textarea>
+        <button class="ai-send-btn" id="ai-send-btn" onclick="aiSendMessage()" disabled>Send</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer id="dash-footer">Brazil Labor Hours Compliance Dashboard &middot; <span id="footer-range"></span> &middot; Made with IBM Bob</footer>
+
+<script>
+// ─── SVG CHART RENDERER ───────────────────────────────────────────────────────
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v] of Object.entries(attrs||{})) e.setAttribute(k,v);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+function svgText(parent,x,y,txt,attrs){
+  const t=el('text',{x,y,'font-family':'-apple-system,sans-serif','font-size':'10','fill':'#57606a',...attrs},parent);
+  t.textContent=String(txt);
+  return t;
+}
+function clearContainer(id){
+  const c=document.getElementById(id);
+  if(!c) return null;
+  c.innerHTML='';
+  return c;
+}
+function makeSVG(container){
+  return el('svg',{viewBox:'0 0 600 260',preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
+}
+
+const SVG={
+  // Vertical bar chart (grouped or stacked) or horizontal
+  bar(containerId,opts){
+    const container=clearContainer(containerId);
+    if(!container) return;
+    const{labels,series,target,stacked,horizontal}=opts;
+    const W=600,H=260;
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
+
+    const mL=horizontal?140:44, mR=20, mT=20, mB=horizontal?30:44;
+    const cW=W-mL-mR, cH=H-mT-mB;
+
+    // compute max value
+    let maxVal=0;
+    if(stacked){
+      labels.forEach((_,i)=>{
+        let s=0; series.forEach(sr=>s+=sr.data[i]||0); if(s>maxVal) maxVal=s;
+      });
+    } else {
+      series.forEach(sr=>sr.data.forEach(v=>{ if((v||0)>maxVal) maxVal=v||0; }));
+    }
+    if(target && target>maxVal) maxVal=target;
+    maxVal=maxVal*1.12 || 1;
+
+    // gridlines + axis
+    const gridCount=4;
+    for(let i=0;i<=gridCount;i++){
+      const frac=i/gridCount;
+      if(horizontal){
+        const x=mL+frac*cW;
+        el('line',{x1:x,y1:mT,x2:x,y2:mT+cH,stroke:i===0?'#c0c8d0':'#e5e7eb','stroke-width':i===0?1.5:1},svg);
+        const v=(maxVal*frac).toFixed(0);
+        svgText(svg,x,mT+cH+14,v,{'text-anchor':'middle','font-size':'9'});
+      } else {
+        const y=mT+(1-frac)*cH;
+        el('line',{x1:mL,y1:y,x2:mL+cW,y2:y,stroke:i===0?'#c0c8d0':'#e5e7eb','stroke-width':i===0?1.5:1},svg);
+        const v=(maxVal*frac).toFixed(0);
+        svgText(svg,mL-4,y+3,v,{'text-anchor':'end','font-size':'9'});
+      }
+    }
+
+    const n=labels.length;
+    const groupW=horizontal? cH/n : cW/n;
+    const pad=horizontal? groupW*0.2 : groupW*0.15;
+    const nSeries=series.length;
+
+    labels.forEach((lbl,i)=>{
+      if(horizontal){
+        const y0=mT+i*groupW+pad/2;
+        const bH=stacked? groupW-pad : (groupW-pad)/nSeries;
+        let xOff=0;
+        series.forEach((sr,si)=>{
+          const v=sr.data[i]||0;
+          const bW=(v/maxVal)*cW;
+          const by=stacked? y0 : y0+si*bH;
+          const bRect=el('rect',{x:mL+(stacked?xOff:0),y:by,width:bW,height:stacked?groupW-pad:bH-2,fill:sr.color||'#4589ff',rx:2},svg);
+          const title=document.createElementNS(NS,'title');
+          title.textContent=`${sr.label}: ${v}`;
+          bRect.appendChild(title);
+          if(stacked) xOff+=bW;
+        });
+        // label
+        svgText(svg,mL-4,mT+i*groupW+groupW/2+3,lbl,{'text-anchor':'end','font-size':'9.5'});
+      } else {
+        const x0=mL+i*groupW+pad/2;
+        const bW=stacked? groupW-pad : (groupW-pad)/nSeries;
+        let yOff=0;
+        series.forEach((sr,si)=>{
+          const v=sr.data[i]||0;
+          const bH=(v/maxVal)*cH;
+          const bx=stacked? x0 : x0+si*bW;
+          const by=stacked? mT+cH-yOff-bH : mT+cH-bH;
+          const bRect=el('rect',{x:bx,y:by,width:stacked?groupW-pad:bW-2,height:Math.max(bH,0),fill:sr.color||'#4589ff',rx:2},svg);
+          const title=document.createElementNS(NS,'title');
+          title.textContent=`${sr.label}: ${v}`;
+          bRect.appendChild(title);
+          if(stacked) yOff+=bH;
+        });
+        // x label
+        const lx=mL+i*groupW+groupW/2;
+        svgText(svg,lx,mT+cH+14,lbl,{'text-anchor':'middle','font-size':'9','writing-mode':'horizontal-tb'});
+        if(lbl.length>5){
+          // rotate long labels
+          const t=svgText(svg,lx,mT+cH+13,lbl,{'text-anchor':'end','font-size':'9','transform':`rotate(-35,${lx},${mT+cH+13})`});
+        }
+      }
+    });
+
+    // target line
+    if(target!=null && !horizontal){
+      const ty=mT+(1-target/maxVal)*cH;
+      el('line',{x1:mL,y1:ty,x2:mL+cW,y2:ty,stroke:'#da1e28','stroke-width':1.5,'stroke-dasharray':'5,4'},svg);
+      svgText(svg,mL+cW-2,ty-3,`Target: ${target}`,{'text-anchor':'end','fill':'#da1e28','font-size':'9','font-weight':'600'});
+    }
+
+    // legend
+    if(series.length>1){
+      let lx=mL;
+      const ly=6;
+      series.forEach(sr=>{
+        el('rect',{x:lx,y:ly,width:10,height:10,fill:sr.color||'#4589ff',rx:2},svg);
+        svgText(svg,lx+13,ly+8,sr.label,{'font-size':'9','fill':'#1f2328'});
+        lx+=80;
+      });
+    }
+  },
+
+  // Line chart with optional area
+  line(containerId,opts){
+    const container=clearContainer(containerId);
+    if(!container) return;
+    const{labels,series,target}=opts;
+    const W=600,H=260;
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
+    const mL=44,mR=20,mT=20,mB=44;
+    const cW=W-mL-mR,cH=H-mT-mB;
+
+    let maxVal=0;
+    series.forEach(sr=>sr.data.forEach(v=>{ if((v||0)>maxVal) maxVal=v||0; }));
+    if(target && target>maxVal) maxVal=target;
+    maxVal=maxVal*1.12||1;
+
+    const n=labels.length;
+    const xStep=cW/(n-1||1);
+
+    // gridlines
+    for(let i=0;i<=4;i++){
+      const frac=i/4;
+      const y=mT+(1-frac)*cH;
+      el('line',{x1:mL,y1:y,x2:mL+cW,y2:y,stroke:i===0?'#c0c8d0':'#e5e7eb','stroke-width':i===0?1.5:1},svg);
+      svgText(svg,mL-4,y+3,(maxVal*frac).toFixed(1),{'text-anchor':'end','font-size':'9'});
+    }
+
+    // x labels
+    labels.forEach((lbl,i)=>{
+      const x=mL+i*xStep;
+      svgText(svg,x,mT+cH+14,lbl,{'text-anchor':'end','font-size':'9','transform':`rotate(-35,${x},${mT+cH+14})`});
+    });
+
+    // series
+    const COLORS=['#4589ff','#da1e28','#24a148','#f1c21b','#8a3ffc','#0072c3'];
+    series.forEach((sr,si)=>{
+      const color=sr.color||COLORS[si%COLORS.length];
+      const pts=sr.data.map((v,i)=>[mL+i*xStep, mT+cH-(((v||0)/maxVal)*cH)]);
+      if(sr.area){
+        const aPath=`M${pts[0][0]},${mT+cH} `+pts.map(p=>`L${p[0]},${p[1]}`).join(' ')+` L${pts[pts.length-1][0]},${mT+cH} Z`;
+        el('path',{d:aPath,fill:color,opacity:'0.12'},svg);
+      }
+      const linePts=pts.map(p=>`${p[0]},${p[1]}`).join(' ');
+      el('polyline',{points:linePts,fill:'none',stroke:color,'stroke-width':2,'stroke-linejoin':'round'},svg);
+      pts.forEach(([x,y],i)=>{
+        const c=el('circle',{cx:x,cy:y,r:3,fill:color},svg);
+        const title=document.createElementNS(NS,'title');
+        title.textContent=`${sr.label} ${labels[i]}: ${sr.data[i]}`;
+        c.appendChild(title);
+      });
+    });
+
+    // target
+    if(target!=null){
+      const ty=mT+cH-(target/maxVal)*cH;
+      el('line',{x1:mL,y1:ty,x2:mL+cW,y2:ty,stroke:'#da1e28','stroke-width':1.5,'stroke-dasharray':'5,4'},svg);
+      svgText(svg,mL+cW-2,ty-3,`Target: ${target}`,{'text-anchor':'end','fill':'#da1e28','font-size':'9','font-weight':'600'});
+    }
+
+    // legend
+    if(series.length>1){
+      let lx=mL;
+      series.forEach((sr,si)=>{
+        const color=sr.color||COLORS[si%COLORS.length];
+        el('rect',{x:lx,y:6,width:10,height:10,fill:color,rx:2},svg);
+        svgText(svg,lx+13,14,sr.label,{'font-size':'9','fill':'#1f2328'});
+        lx+=Math.max(sr.label.length*6+18,80);
+      });
+    }
+  },
+
+  // Donut chart
+  donut(containerId,opts){
+    const container=clearContainer(containerId);
+    if(!container) return;
+    const{data}=opts;
+    const W=260,H=220;
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
+    const cx=100,cy=110,ro=80,ri=48;
+    const total=data.reduce((s,d)=>s+(d.value||0),0)||1;
+    let angle=-Math.PI/2;
+    data.forEach(d=>{
+      const slice=(d.value/total)*2*Math.PI;
+      const x1=cx+ro*Math.cos(angle), y1=cy+ro*Math.sin(angle);
+      const x2=cx+ro*Math.cos(angle+slice), y2=cy+ro*Math.sin(angle+slice);
+      const ix1=cx+ri*Math.cos(angle), iy1=cy+ri*Math.sin(angle);
+      const ix2=cx+ri*Math.cos(angle+slice), iy2=cy+ri*Math.sin(angle+slice);
+      const lg=slice>Math.PI?1:0;
+      const path=`M${ix1},${iy1} L${x1},${y1} A${ro},${ro} 0 ${lg} 1 ${x2},${y2} L${ix2},${iy2} A${ri},${ri} 0 ${lg} 0 ${ix1},${iy1} Z`;
+      const p=el('path',{d:path,fill:d.color||'#4589ff'},svg);
+      const title=document.createElementNS(NS,'title');
+      title.textContent=`${d.label}: ${d.value}`;
+      p.appendChild(title);
+      angle+=slice;
+    });
+    // legend
+    data.forEach((d,i)=>{
+      const ly=20+i*18;
+      el('rect',{x:190,y:ly,width:12,height:12,fill:d.color||'#4589ff',rx:2},svg);
+      svgText(svg,206,ly+9,d.label,{'font-size':'9.5','fill':'#1f2328'});
+    });
+  }
+};
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+const _init={};
+const TAB_IDS=['executive','additional','ah-analysis','consecutive','rest','offenders','projects'];
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach((b,i)=>b.classList.toggle('active',TAB_IDS[i]===id));
+  if(!_init[id]){_init[id]=true; setTimeout(()=>buildPage(id),20);}
+}
+function subNav(tab,sub){
+  const bar=document.querySelectorAll(`#${tab}-analysis .sub-tab-bar button`);
+  bar.forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`#${tab}-analysis .sub-page`).forEach(p=>p.classList.remove('active'));
+  const subEl=document.getElementById(`${tab}-${sub}`);
+  if(subEl) subEl.classList.add('active');
+  // find clicked button
+  const subMap={filtered:0,matrix:1,split:2};
+  if(bar[subMap[sub]]) bar[subMap[sub]].classList.add('active');
+  if(!_init[`${tab}-${sub}`]){_init[`${tab}-${sub}`]=true; setTimeout(()=>buildSubPage(tab,sub),20);}
+}
+
+function buildPage(id){
+  switch(id){
+    case 'executive': buildExecutive(); break;
+    case 'additional': buildAdditional(); break;
+    case 'ah-analysis': buildAHAnalysis(); break;
+    case 'consecutive': buildConsecutive(); break;
+    case 'rest': buildRest(); break;
+    case 'offenders': buildOffenders(); break;
+    case 'projects': buildProjects(); break;
+  }
+}
+function buildSubPage(tab,sub){
+  if(tab==='ah') switch(sub){
+    case 'filtered': buildFiltered(); break;
+    case 'matrix': renderMatrix(); break;
+    case 'split': buildSplit(); break;
+  }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function fmt(v,dec=1){ return v==null?'N/A':typeof v==='number'?v.toFixed(dec):v; }
+function pct(v){ return v==null?'N/A':v.toFixed(1)+'%'; }
+function kpi(el,val,lbl,sub,cls=''){
+  return `<div class="kpi ${cls}"><div class="val">${val}</div><div class="lbl">${lbl}</div>${sub?`<div class="sub">${sub}</div>`:''}
+</div>`;
+}
+function badge(cls,txt){ return `<span class="bc ${cls}">${txt}</span>`; }
+function sum(arr,key){ return arr.reduce((s,r)=>(s+(r[key]||0)),0); }
+function avg(arr,key){ const v=arr.filter(r=>r[key]!=null); return v.length?v.reduce((s,r)=>s+r[key],0)/v.length:null; }
+
+// ─── TAB 1: EXECUTIVE ────────────────────────────────────────────────────────
+function buildExecutive(){
+  const totalPersons=sum(AH,'persons');
+  const totalExc=sum(AH,'exc');
+  const totalWknd=sum(AH,'wknd');
+  const avgPct=avg(AH,'pct');
+  const totalRBWUnique=sum(RBW,'unique');
+  const totalConsUnique=sum(CONS,'unique');
+  const totalMH=sum(RBW,'mh');
+  const maxPct=Math.max(...AH.filter(r=>r.pct!=null).map(r=>r.pct));
+
+  const g=document.getElementById('exec-kpis');
+  g.innerHTML=
+    kpi(null,totalPersons,'Total AH Person-Months','Aug 2025 – Jul 2026','red')+
+    kpi(null,pct(avgPct),'Avg % HC with AH','Months with HC data','yellow')+
+    kpi(null,pct(maxPct),'Peak AH Rate','Sep/25','red')+
+    kpi(null,totalExc,'Total Excessive (>12h) Events','Across all months','red')+
+    kpi(null,totalWknd,'Total Weekend Violations','','yellow')+
+    kpi(null,totalRBWUnique,'Total RBW Unique Persons','Rest violations','red')+
+    kpi(null,totalConsUnique,'Total Consecutive Unique','Day violations','')+
+    kpi(null,totalMH+'h','Total Missing Rest Hours','RBW deficit','yellow');
+
+  // Chart 1: Persons with AH per month + % of HC + target 10%
+  SVG.bar('ch-exec-ah',{
+    labels:M,
+    series:[{label:'Persons with AH',data:AH.map(r=>r.persons),color:'#4589ff'}],
+    target:null
+  });
+  // overlay line for pct — we need a combo; use line chart on second call with dual axis approximation
+  SVG.line('ch-exec-ah',{
+    labels:M,
+    series:[
+      {label:'Persons with AH',data:AH.map(r=>r.persons),color:'#4589ff',area:true},
+      {label:'% of HC',data:AH.map(r=>r.pct),color:'#f1c21b'}
+    ],
+    target:10
+  });
+
+  // Chart 2: multi-line AH / Cons / RBW
+  SVG.line('ch-exec-multi',{
+    labels:M,
+    series:[
+      {label:'AH Persons',data:AH.map(r=>r.persons),color:'#4589ff'},
+      {label:'Consecutive',data:CONS.map(r=>r.unique),color:'#da1e28'},
+      {label:'RBW Unique',data:RBW.map(r=>r.unique),color:'#24a148'}
+    ]
+  });
+
+  // Heatmap table
+  const tbl=document.getElementById('tbl-heatmap');
+  const months12=M;
+  let html='<thead><tr><th>Category</th>'+months12.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
+  const rows=[
+    {label:'AH % HC',data:AH.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[10,15,20],cls:v=>v==null?'':v>20?'bc red':v>15?'bc yellow':'bc green'},
+    {label:'Cat 1-2 % HC',data:AH.map(r=>r.p12),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[8,12,16],cls:v=>v==null?'':v>16?'bc red':v>12?'bc yellow':'bc green'},
+    {label:'Cat 3-10 % HC',data:AH.map(r=>r.p310),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[3,5,7],cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
+    {label:'Cat 11-20 % HC',data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%',thr:[0.3,0.6,1],cls:v=>v==null?'':v>1?'bc red':v>0.6?'bc yellow':'bc green'},
+    {label:'Weekend Viol.',data:AH.map(r=>r.wknd),fmt:v=>v,thr:[30,50,80],cls:v=>v>80?'bc red':v>50?'bc yellow':'bc green'},
+    {label:'RBW % HC',data:RBW.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[4,6,9],cls:v=>v==null?'':v>9?'bc red':v>6?'bc yellow':'bc green'},
+    {label:'Cons. Unique',data:CONS.map(r=>r.unique),fmt:v=>v,thr:[20,35,45],cls:v=>v>45?'bc red':v>35?'bc yellow':'bc green'},
+  ];
+  rows.forEach(row=>{
+    html+=`<tr><td style="font-weight:600">${row.label}</td>`+row.data.map(v=>`<td><span class="${row.cls(v)}">${row.fmt(v)}</span></td>`).join('')+'</tr>';
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 2: ADDITIONAL HOURS ─────────────────────────────────────────────────
+function buildAdditional(){
+  const g=document.getElementById('ah-kpis');
+  const totalOcc=sum(AH,'persons');
+  const totalExc=sum(AH,'exc');
+  const totalWknd=sum(AH,'wknd');
+  const totalExHrs=sum(AH,'exHrs');
+  const totalC12=sum(AH,'c12');
+  const totalC310=sum(AH,'c310');
+  const totalC1120=sum(AH,'c1120');
+  const totalC21=sum(AH,'c21');
+  g.innerHTML=
+    kpi(null,totalOcc,'Total Person-Months with AH','','red')+
+    kpi(null,totalExHrs+'h','Total Excess Hours','','red')+
+    kpi(null,totalExc,'Total Excessive (>12h)','Events','red')+
+    kpi(null,totalWknd,'Total Weekend Violations','','yellow')+
+    kpi(null,totalC12,'Cat 1-2 Person-Months','1-2 occurrences','')+
+    kpi(null,totalC310,'Cat 3-10 Person-Months','3-10 occurrences','yellow')+
+    kpi(null,totalC1120,'Cat 11-20 Person-Months','11-20 occurrences','red')+
+    kpi(null,totalC21,'Cat 21+ Person-Months','21+ occurrences','red');
+
+  // Stacked bar % HC Cat 1-2 / 3-10 / 11+
+  SVG.bar('ch-ah-cat',{
+    labels:M,
+    stacked:true,
+    series:[
+      {label:'Cat 1-2 % HC',data:AH.map(r=>r.p12),color:'#4589ff'},
+      {label:'Cat 3-10 % HC',data:AH.map(r=>r.p310),color:'#f1c21b'},
+      {label:'Cat 11+ % HC',data:AH.map(r=>r.p1120),color:'#da1e28'}
+    ],
+    target:10
+  });
+
+  // Total excess hours
+  SVG.bar('ch-ah-exhrs',{
+    labels:M,
+    series:[{label:'Excess Hours',data:AH.map(r=>r.exHrs),color:'#8a3ffc'}]
+  });
+
+  // Weekend
+  SVG.bar('ch-ah-wknd',{
+    labels:M,
+    series:[{label:'Weekend Violations',data:AH.map(r=>r.wknd),color:'#f1c21b'}]
+  });
+
+  // Excessive >12h
+  SVG.bar('ch-ah-exc',{
+    labels:M,
+    series:[{label:'Excessive >12h',data:AH.map(r=>r.exc),color:'#da1e28'}]
+  });
+
+  // Detail table
+  const tbl=document.getElementById('tbl-ah-detail');
+  let html='<thead><tr><th>Month</th><th>HC</th><th>Persons</th><th>% HC</th><th>Cat 1-2</th><th>Cat 3-10</th><th>Cat 11-20</th><th>Cat 21+</th><th>Weekend</th><th>Excess Hrs</th><th>>12h Events</th></tr></thead><tbody>';
+  AH.forEach((r,i)=>{
+    const cls=r.pct==null?'':r.pct>20?'bc red':r.pct>15?'bc yellow':'bc green';
+    html+=`<tr><td><strong>${M[i]}</strong></td><td>${r.hc||'—'}</td><td>${r.persons}</td>
+      <td>${r.pct!=null?`<span class="${cls}">${r.pct.toFixed(1)}%</span>`:'—'}</td>
+      <td>${r.c12}</td><td>${r.c310}</td><td>${r.c1120}</td><td>${r.c21}</td>
+      <td>${r.wknd}</td><td>${r.exHrs}h</td><td>${r.exc}</td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 3: AH ANALYSIS ──────────────────────────────────────────────────────
+let EMP_MONTH=null;
+let _empLoading=false;
+
+function buildAHAnalysis(){
+  // trigger load + show first sub-tab (filtered)
+  if(!_init['ah-filtered']){
+    _init['ah-filtered']=true;
+    loadEmpChunks();
+  }
+  // split sub-tab charts only if already visited
+}
+
+function loadEmpChunks(){
+  if(_empLoading||EMP_MONTH) return;
+  _empLoading=true;
+  const loader=document.getElementById('emp-loader');
+  const filtBar=document.getElementById('filt-bar');
+  loader.style.display='block';
+  loader.textContent='⏳ Loading employee data (1/5)…';
+
+  let loaded=0;
+  const chunks=['_empChunk0','_empChunk1','_empChunk2','_empChunk3','_empChunk4'];
+
+  function loadNext(i){
+    if(i>=5){
+      // assemble
+      EMP_MONTH=[];
+      chunks.forEach(k=>{ if(window[k]) EMP_MONTH=EMP_MONTH.concat(window[k]); });
+      loader.style.display='none';
+      filtBar.style.display='flex';
+      populateFilterDropdowns();
+      renderFiltered();
+      // also populate matrix dropdowns
+      populateMatrixDropdowns();
+      return;
+    }
+    const s=document.createElement('script');
+    s.src='brazil-labor-emp-'+i+'.js';
+    s.onload=()=>{
+      loaded++;
+      loader.textContent=`⏳ Loading employee data (${loaded+1}/5)…`;
+      loadNext(i+1);
+    };
+    s.onerror=()=>{
+      // chunk missing — continue
+      loaded++;
+      loadNext(i+1);
+    };
+    document.head.appendChild(s);
+  }
+  loadNext(0);
+}
+
+function populateFilterDropdowns(){
+  if(!EMP_MONTH) return;
+  const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
+  const mgrs=[...new Set(EMP_MONTH.map(r=>r.mgr))].sort();
+  const fpSel=document.getElementById('flt-proj');
+  const fmSel=document.getElementById('flt-mgr');
+  const fmonSel=document.getElementById('flt-mon');
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
+  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
+  fpSel.onchange=fmSel.onchange=fmonSel.onchange=renderFiltered;
+}
+function populateMatrixDropdowns(){
+  if(!EMP_MONTH) return;
+  const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
+  const mgrs=[...new Set(EMP_MONTH.map(r=>r.mgr))].sort();
+  const mpSel=document.getElementById('mat-proj');
+  const mmSel=document.getElementById('mat-mgr');
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; mpSel.appendChild(o); });
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; mmSel.appendChild(o); });
+  mpSel.onchange=mmSel.onchange=renderMatrix;
+}
+
+function ahCatBadge(t){
+  if(t>=21) return badge('red','Cat 21+');
+  if(t>=11) return badge('red','Cat 11-20');
+  if(t>=3) return badge('yellow','Cat 3-10');
+  if(t>=1) return badge('blue','Cat 1-2');
+  return '';
+}
+
+function renderFiltered(){
+  if(!EMP_MONTH) return;
+  const proj=document.getElementById('flt-proj').value;
+  const mgr=document.getElementById('flt-mgr').value;
+  const mon=document.getElementById('flt-mon').value;
+  const name=(document.getElementById('flt-name').value||'').toLowerCase();
+  let rows=EMP_MONTH;
+  if(proj) rows=rows.filter(r=>r.project===proj);
+  if(mgr) rows=rows.filter(r=>r.mgr===mgr);
+  if(mon) rows=rows.filter(r=>r.my===mon);
+  if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+  document.getElementById('flt-rc').textContent=`${rows.length} records`;
+  const tbody=document.getElementById('tbl-filtered-body');
+  const show=rows.slice(0,300);
+  tbody.innerHTML=show.map(r=>{
+    const mLabel=M[MY.indexOf(r.my)]||r.my;
+    return `<tr><td>${r.name}</td><td style="font-size:11px;color:#57606a">${r.mgr}</td><td>${r.project}</td><td>${mLabel}</td>
+      <td>${r.total}</td><td>${r.leq15}</td><td>${r.gt15}</td><td>${r.excessive}</td><td>${r.weekendViol}</td>
+      <td>${ahCatBadge(r.total)}</td></tr>`;
+  }).join('');
+  if(rows.length>300) tbody.innerHTML+=`<tr><td colspan="10" style="color:#57606a;text-align:center">…and ${rows.length-300} more rows. Use filters to narrow results.</td></tr>`;
+}
+
+function renderMatrix(){
+  if(!EMP_MONTH) return;
+  const proj=document.getElementById('mat-proj').value;
+  const mgr=document.getElementById('mat-mgr').value;
+  const name=(document.getElementById('mat-name').value||'').toLowerCase();
+  let rows=EMP_MONTH;
+  if(proj) rows=rows.filter(r=>r.project===proj);
+  if(mgr) rows=rows.filter(r=>r.mgr===mgr);
+  if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // pivot
+  const empMap={};
+  rows.forEach(r=>{
+    if(!empMap[r.name]) empMap[r.name]={};
+    const prev=empMap[r.name][r.my]||0;
+    empMap[r.name][r.my]=prev+r.total;
+  });
+  const emps=Object.keys(empMap).sort();
+  document.getElementById('mat-rc').textContent=`${emps.length} employees`;
+
+  function cellCls(v){
+    if(!v||v===0) return 'c0';
+    if(v<=2) return 'c1';
+    if(v<=10) return 'c3';
+    return 'chi';
+  }
+
+  const tbl=document.getElementById('tbl-matrix');
+  let html='<thead><tr><th>Employee</th>'+MY.map((my,i)=>`<th>${M[i]}</th>`).join('')+'</tr></thead><tbody>';
+  const showEmps=emps.slice(0,200);
+  showEmps.forEach(emp=>{
+    html+=`<tr><td>${emp}</td>`+MY.map(my=>{
+      const v=empMap[emp][my]||0;
+      const cls=cellCls(v);
+      return `<td class="${cls}">${v===0?'–':v>=11?`<span class="${cls}">${v}</span>`:v}</td>`;
+    }).join('')+'</tr>';
+  });
+  if(emps.length>200) html+=`<tr><td colspan="${MY.length+1}" style="color:#57606a;text-align:center">…and ${emps.length-200} more. Use filters to narrow.</td></tr>`;
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+function buildSplit(){
+  // Stacked bar by month
+  SVG.bar('ch-split-bar',{
+    labels:MS.map(r=>r.l),
+    stacked:true,
+    series:[
+      {label:'≤15min',data:MS.map(r=>r.leq),color:'#f1c21b'},
+      {label:'>15min',data:MS.map(r=>r.gt),color:'#da1e28'}
+    ]
+  });
+  // % ≤15min line
+  SVG.line('ch-split-pct',{
+    labels:MS.map(r=>r.l),
+    series:[{label:'% ≤15min',data:MS.map(r=>+(r.leq/(r.leq+r.gt)*100).toFixed(1)),color:'#f1c21b',area:true}]
+  });
+  // Horizontal stacked by project
+  SVG.bar('ch-split-proj',{
+    labels:PS.map(r=>r.p),
+    stacked:true,
+    horizontal:true,
+    series:[
+      {label:'≤15min',data:PS.map(r=>r.leq),color:'#f1c21b'},
+      {label:'>15min',data:PS.map(r=>r.gt),color:'#da1e28'}
+    ]
+  });
+  // Detail table
+  const tbl=document.getElementById('tbl-split-proj');
+  let html='<thead><tr><th>Project</th><th>≤15min</th><th>&gt;15min</th><th>Total</th><th>% ≤15min</th></tr></thead><tbody>';
+  PS.forEach(r=>{
+    const tot=r.leq+r.gt;
+    html+=`<tr><td><strong>${r.p}</strong></td><td>${r.leq}</td><td>${r.gt}</td><td>${tot}</td>
+      <td><span class="pbar-wrap"><span class="pbar-fill" style="width:${r.pct}%"></span></span> ${r.pct}%</td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 4: CONSECUTIVE ──────────────────────────────────────────────────────
+function buildConsecutive(){
+  const g=document.getElementById('cons-kpis');
+  const totalUnique=sum(CONS,'unique');
+  const totalTotal=sum(CONS,'total');
+  const maxUnique=Math.max(...CONS.map(r=>r.unique));
+  const maxMonth=M[CONS.indexOf(CONS.find(r=>r.unique===maxUnique))];
+  const avgPct=avg(CONS,'pct');
+  const lastPct=CONS[CONS.length-1].pct;
+  g.innerHTML=
+    kpi(null,totalUnique,'Total Unique Persons','Consecutive violations','yellow')+
+    kpi(null,totalTotal,'Total Occurrences','All months','')+
+    kpi(null,maxUnique,`Peak Month: ${maxMonth}`,'Unique persons','red')+
+    kpi(null,pct(avgPct),'Avg % HC','Months with HC data','yellow')+
+    kpi(null,CONS[0].unique,'Aug/25 Unique','First month','')+
+    kpi(null,CONS[CONS.length-1].unique,'Jul/26 Unique','Last month','green');
+
+  SVG.line('ch-cons-line',{
+    labels:M,
+    series:[{label:'Unique Persons',data:CONS.map(r=>r.unique),color:'#da1e28',area:true}]
+  });
+
+  SVG.bar('ch-cons-bar',{
+    labels:M,
+    series:[
+      {label:'Total Occurrences',data:CONS.map(r=>r.total),color:'#4589ff'},
+      {label:'Unique Persons',data:CONS.map(r=>r.unique),color:'#da1e28'}
+    ]
+  });
+
+  const tbl=document.getElementById('tbl-cons-detail');
+  let html='<thead><tr><th>Month</th><th>HC</th><th>Unique Persons</th><th>Total Occurrences</th><th>% HC</th></tr></thead><tbody>';
+  CONS.forEach((r,i)=>{
+    const cls=r.pct==null?'':r.pct>3?'bc red':r.pct>2?'bc yellow':'bc green';
+    html+=`<tr><td><strong>${M[i]}</strong></td><td>${r.hc||'—'}</td><td>${r.unique}</td><td>${r.total}</td>
+      <td>${r.pct!=null?`<span class="${cls}">${r.pct.toFixed(2)}%</span>`:'—'}</td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 5: REST BETWEEN WORKDAYS ────────────────────────────────────────────
+function buildRest(){
+  const g=document.getElementById('rbw-kpis');
+  const totalUnique=sum(RBW,'unique');
+  const totalTotal=sum(RBW,'total');
+  const totalMH=sum(RBW,'mh');
+  const avgPct=avg(RBW,'pct');
+  const maxPct=Math.max(...RBW.filter(r=>r.pct!=null).map(r=>r.pct));
+  const lastPct=RBW[RBW.length-1].pct;
+  g.innerHTML=
+    kpi(null,totalUnique,'Total Unique Persons','RBW violations','red')+
+    kpi(null,totalTotal,'Total Occurrences','All months','red')+
+    kpi(null,totalMH+'h','Total Missing Rest Hours','','yellow')+
+    kpi(null,pct(avgPct),'Avg % HC','With HC data','red')+
+    kpi(null,pct(maxPct),'Peak % HC','Aug/25','red')+
+    kpi(null,pct(lastPct),'Jul/26 % HC','Latest month','yellow');
+
+  SVG.bar('ch-rbw-pct',{
+    labels:M,
+    series:[{label:'% HC with RBW',data:RBW.map(r=>r.pct),color:'#da1e28'}],
+    target:4
+  });
+
+  SVG.bar('ch-rbw-mh',{
+    labels:M,
+    series:[{label:'Missing Rest Hours',data:RBW.map(r=>r.mh),color:'#8a3ffc'}]
+  });
+
+  const tbl=document.getElementById('tbl-rbw-detail');
+  let html='<thead><tr><th>Month</th><th>HC</th><th>Unique Persons</th><th>Total Occurrences</th><th>% HC</th><th>Missing Hours</th></tr></thead><tbody>';
+  RBW.forEach((r,i)=>{
+    const cls=r.pct==null?'':r.pct>6?'bc red':r.pct>4?'bc yellow':'bc green';
+    html+=`<tr><td><strong>${M[i]}</strong></td><td>${r.hc||'—'}</td><td>${r.unique}</td><td>${r.total}</td>
+      <td>${r.pct!=null?`<span class="${cls}">${r.pct.toFixed(2)}%</span>`:'—'}</td><td>${r.mh}h</td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 6: TOP OFFENDERS ────────────────────────────────────────────────────
+function buildOffenders(){
+  SVG.bar('ch-top-ah',{
+    labels:TOP_AH.map(r=>r.n.split(' ').slice(0,2).join(' ')),
+    horizontal:true,
+    series:[
+      {label:'Total',data:TOP_AH.map(r=>r.t),color:'#4589ff'},
+      {label:'Excessive',data:TOP_AH.map(r=>r.ex),color:'#da1e28'}
+    ]
+  });
+
+  SVG.bar('ch-top-cons',{
+    labels:TOP_CONS.map(r=>r.n.split(' ').slice(0,2).join(' ')),
+    horizontal:true,
+    series:[{label:'Occurrences',data:TOP_CONS.map(r=>r.t),color:'#da1e28'}]
+  });
+
+  SVG.bar('ch-top-rbw',{
+    labels:TOP_RBW.map(r=>r.n.split(' ').slice(0,2).join(' ')),
+    horizontal:true,
+    series:[
+      {label:'Events',data:TOP_RBW.map(r=>r.t),color:'#8a3ffc'},
+      {label:'Missing Hrs',data:TOP_RBW.map(r=>r.mh),color:'#f1c21b'}
+    ]
+  });
+
+  // Detail table
+  const tbl=document.getElementById('tbl-top-ah');
+  let html='<thead><tr><th>#</th><th>Employee</th><th>Project</th><th>Manager</th><th>Total</th><th>Months</th><th>Excessive</th><th>Weekend</th><th>Risk</th></tr></thead><tbody>';
+  TOP_AH.forEach((r,i)=>{
+    const risk=r.t>=100?badge('red','CRITICAL'):r.t>=70?badge('red','HIGH'):r.t>=50?badge('yellow','MEDIUM'):badge('blue','LOW');
+    html+=`<tr><td>${i+1}</td><td><strong>${r.n}</strong></td><td>${r.p}</td><td style="font-size:11px">${r.m}</td>
+      <td>${r.t}</td><td>${r.mo}</td><td>${r.ex}</td><td>${r.wk}</td><td>${risk}</td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 7: PROJECTS & MANAGERS ──────────────────────────────────────────────
+function buildProjects(){
+  SVG.bar('ch-proj',{
+    labels:PROJECTS.map(r=>r.p),
+    horizontal:true,
+    series:[
+      {label:'AH Occurrences',data:PROJECTS.map(r=>r.occ),color:'#4589ff'},
+      {label:'Excessive',data:PROJECTS.map(r=>r.exc),color:'#da1e28'}
+    ]
+  });
+
+  SVG.bar('ch-mgr',{
+    labels:MANAGERS.map(r=>r.m.split(' ')[0]+' '+r.m.split(' ')[1]),
+    horizontal:true,
+    series:[
+      {label:'AH Occurrences',data:MANAGERS.map(r=>r.occ),color:'#4589ff'},
+      {label:'Excessive',data:MANAGERS.map(r=>r.exc),color:'#da1e28'}
+    ]
+  });
+
+  const tbl=document.getElementById('tbl-proj-detail');
+  let html='<thead><tr><th>Project</th><th>TW</th><th>AH Occurrences</th><th>Excessive</th><th>Weekend</th><th>Unique Persons</th><th>Exc Rate</th></tr></thead><tbody>';
+  PROJECTS.forEach(r=>{
+    const excRate=(r.occ>0?((r.exc/r.occ)*100).toFixed(1):'0')+'%';
+    const cls=parseFloat(excRate)>30?'bc red':parseFloat(excRate)>20?'bc yellow':'bc green';
+    html+=`<tr><td><strong>${r.p}</strong></td><td>${r.tw}</td><td>${r.occ}</td><td>${r.exc}</td><td>${r.wk}</td><td>${r.per}</td>
+      <td><span class="${cls}">${excRate}</span></td></tr>`;
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 8: ASK AI ───────────────────────────────────────────────────────────
+// Conversation history (for multi-turn context)
+let _aiHistory = [];
+let _aiOnline = false;
+
+// Build a rich text context snapshot from all dashboard data variables
+function aiBuildContext() {
+  const p = n => n !== null && n !== undefined ? n : 'N/A';
+  const pct = n => n !== null && n !== undefined ? n.toFixed(2)+'%' : 'N/A';
+
+  // Month labels helper
+  const ml = (i) => M[i] || MY[i] || `Month ${i+1}`;
+
+  let ctx = `## Brazil Labor Compliance Dataset — ${DATE_RANGE}\n\n`;
+
+  // ── Compliance targets ────────────────────────────────────────────────────
+  ctx += `### Compliance Targets (Brazil Labor Law)\n`;
+  ctx += `- Additional Hours Cat 1-2 (1-2 occurrences/month): ≤10% of eligible HC\n`;
+  ctx += `- Additional Hours Cat 3-10 (3-10 occurrences/month): ≤5% of eligible HC\n`;
+  ctx += `- Additional Hours Cat 11-20 (11-20 occurrences/month): ≤0.5% of eligible HC\n`;
+  ctx += `- Additional Hours Cat 21+ (≥21 occurrences/month): ZERO TOLERANCE\n`;
+  ctx += `- Weekend/Holiday work >8h: ZERO TOLERANCE\n`;
+  ctx += `- Consecutive days >6: ZERO TOLERANCE\n`;
+  ctx += `- Rest Between Workdays <11h: ≤4% of eligible HC\n\n`;
+
+  // ── Additional Hours monthly ─────────────────────────────────────────────
+  ctx += `### Additional Hours — Monthly Summary (${AH.length} months)\n`;
+  ctx += `Month | HC | Persons w/AH | %HC | Cat1-2 | %Cat1-2 | BREACH | Cat3-10 | %Cat3-10 | BREACH | Cat11-20 | %Cat11-20 | BREACH | Cat21+ | BREACH | WkndViol | ExcessHrs | >12hEvents\n`;
+  AH.forEach((m,i) => {
+    ctx += `${ml(i)} | ${p(m.hc)} | ${m.persons} | ${pct(m.pct)} | ${m.c12} | ${pct(m.p12)} | ${m.b12?'YES':'no'} | ${m.c310} | ${pct(m.p310)} | ${m.b310?'YES':'no'} | ${m.c1120} | ${pct(m.p1120)} | ${m.b1120?'YES':'no'} | ${m.c21} | ${m.b21?'YES':'no'} | ${m.wknd} | ${m.exHrs} | ${m.exc}\n`;
+  });
+  ctx += '\n';
+
+  // ── Consecutive monthly ──────────────────────────────────────────────────
+  ctx += `### Consecutive Days — Monthly Summary (${CONS.length} months)\n`;
+  ctx += `Month | HC | Unique Persons | Total Occurrences | %HC | BREACH\n`;
+  CONS.forEach((m,i) => {
+    ctx += `${ml(i)} | ${p(m.hc)} | ${m.unique} | ${m.total} | ${pct(m.pct)} | ${m.unique>0?'YES':'no'}\n`;
+  });
+  ctx += '\n';
+
+  // ── RBW monthly ──────────────────────────────────────────────────────────
+  ctx += `### Rest Between Workdays — Monthly Summary (${RBW.length} months)\n`;
+  ctx += `Month | HC | Unique Persons | Total Occurrences | %HC | Missing Rest Hrs | BREACH (>4%)\n`;
+  RBW.forEach((m,i) => {
+    ctx += `${ml(i)} | ${p(m.hc)} | ${m.unique} | ${m.total} | ${pct(m.pct)} | ${m.mh} | ${(m.pct!==null&&m.pct>4)?'YES':'no'}\n`;
+  });
+  ctx += '\n';
+
+  // ── ≤15 min split ────────────────────────────────────────────────────────
+  ctx += `### ≤15 Min Excess Split (Additional Hours)\n`;
+  ctx += `Month | ≤15min violations | >15min violations | Total | %≤15min\n`;
+  MS.forEach(m => {
+    const tot = m.leq+m.gt;
+    ctx += `${m.l} | ${m.leq} | ${m.gt} | ${tot} | ${tot>0?(m.leq/tot*100).toFixed(1)+'%':'N/A'}\n`;
+  });
+  ctx += '\n';
+
+  // ── Top 15 AH offenders ──────────────────────────────────────────────────
+  ctx += `### Top 15 Additional Hours Offenders (all-time)\n`;
+  ctx += `Rank | Employee | Project | Manager | Total Occurrences | Months Active | Excessive(>12h) | Weekend Violations\n`;
+  TOP_AH.forEach((r,i) => {
+    ctx += `${i+1} | ${r.n} | ${r.p} | ${r.m} | ${r.t} | ${r.mo} | ${r.ex} | ${r.wk}\n`;
+  });
+  ctx += '\n';
+
+  // ── Top 15 CONS offenders ────────────────────────────────────────────────
+  ctx += `### Top 15 Consecutive Days Offenders (all-time)\n`;
+  ctx += `Rank | Employee | Project | Total Violations\n`;
+  TOP_CONS.forEach((r,i) => {
+    ctx += `${i+1} | ${r.n} | ${r.p} | ${r.t}\n`;
+  });
+  ctx += '\n';
+
+  // ── Top 15 RBW offenders ─────────────────────────────────────────────────
+  ctx += `### Top 15 Rest Between Workdays Offenders (all-time)\n`;
+  ctx += `Rank | Employee | Project | Total Occurrences | Total Missing Rest Hours\n`;
+  TOP_RBW.forEach((r,i) => {
+    ctx += `${i+1} | ${r.n} | ${r.p} | ${r.t} | ${r.mh}\n`;
+  });
+  ctx += '\n';
+
+  // ── Projects ─────────────────────────────────────────────────────────────
+  ctx += `### Top 15 Projects by AH Occurrences\n`;
+  ctx += `Project | Tower/Team | AH Occurrences | Excessive(>12h) | Weekend Violations | Unique Persons Affected\n`;
+  PROJECTS.forEach(r => {
+    ctx += `${r.p} | ${r.tw} | ${r.occ} | ${r.exc} | ${r.wk} | ${r.per}\n`;
+  });
+  ctx += '\n';
+
+  // ── Managers ─────────────────────────────────────────────────────────────
+  ctx += `### Top 12 Managers by AH Occurrences\n`;
+  ctx += `Manager | AH Occurrences | Excessive(>12h) | Unique Persons\n`;
+  MANAGERS.forEach(r => {
+    ctx += `${r.m} | ${r.occ} | ${r.exc} | ${r.per}\n`;
+  });
+  ctx += '\n';
+
+  // ── ≤15min by project ────────────────────────────────────────────────────
+  ctx += `### ≤15 Min Excess by Project\n`;
+  ctx += `Project | ≤15min | >15min | Total | %≤15min\n`;
+  PS.forEach(r => {
+    ctx += `${r.p} | ${r.leq} | ${r.gt} | ${r.leq+r.gt} | ${r.pct}%\n`;
+  });
+
+  return ctx;
+}
+
+// Render lightweight markdown to HTML (bold, italic, bullets, numbered, code)
+function aiMarkdown(text) {
+  // Escape HTML first except for allowed patterns
+  let h = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Code blocks
+  h = h.replace(/```[\s\S]*?```/g, m => {
+    const inner = m.slice(3, -3).replace(/^[a-z]*\n/,'');
+    return `<pre>${inner}</pre>`;
+  });
+  // Inline code
+  h = h.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // Bold
+  h = h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  // Italic
+  h = h.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  // Blockquote
+  h = h.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
+  // Headers → bold line
+  h = h.replace(/^#{1,3} (.+)$/gm,'<strong>$1</strong>');
+  // Numbered list
+  h = h.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
+  // Bullet list
+  h = h.replace(/^[-*] (.+)$/gm,'<li>$1</li>');
+  // Wrap consecutive <li> in <ul>
+  h = h.replace(/(<li>.*<\/li>(\n|$))+/g, m => `<ul>${m}</ul>`);
+  // Paragraphs (double newline)
+  h = h.replace(/\n{2,}/g,'</p><p>');
+  // Single newline
+  h = h.replace(/\n/g,'<br>');
+  return `<p>${h}</p>`;
+}
+
+function aiAppendMsg(role, text) {
+  const box = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  if (role === 'assistant') div.innerHTML = aiMarkdown(text);
+  else if (role === 'system') { div.textContent = text; }
+  else div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function aiSetTyping(show) {
+  const t = document.getElementById('ai-typing');
+  t.style.display = show ? 'block' : 'none';
+  if (show) {
+    const box = document.getElementById('ai-messages');
+    box.scrollTop = box.scrollHeight;
+  }
+}
+
+async function aiCheckServer() {
+  const url = document.getElementById('ai-server-url').value.trim().replace(/\/$/, '');
+  const status = document.getElementById('ai-server-status');
+  const badge = document.getElementById('ai-conn-badge');
+  const btn = document.getElementById('ai-send-btn');
+  status.textContent = 'Checking…';
+  status.style.color = '#8a9099';
+  try {
+    const r = await fetch(`${url}/health`, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const j = await r.json();
+      status.textContent = `Connected — model: ${j.model || 'unknown'}`;
+      status.style.color = '#198038';
+      badge.textContent = 'Online';
+      badge.className = 'ai-badge-online';
+      btn.disabled = false;
+      _aiOnline = true;
+      if(document.getElementById('ai-messages').querySelectorAll('.ai-msg:not(.system)').length === 0){
+        aiAppendMsg('system','Ready. Ask a question or pick a suggestion below.');
+      }
+    } else {
+      throw new Error(`HTTP ${r.status}`);
+    }
+  } catch(e) {
+    status.textContent = `Cannot reach server: ${e.message}`;
+    status.style.color = '#da1e28';
+    badge.textContent = 'Offline';
+    badge.className = 'ai-badge-offline';
+    btn.disabled = true;
+    _aiOnline = false;
+  }
+}
+
+function aiClearChat() {
+  _aiHistory = [];
+  const box = document.getElementById('ai-messages');
+  box.innerHTML = '<div class="ai-msg system">Chat cleared. Ask a new question.</div>';
+}
+
+async function aiSendMessage() {
+  const ta = document.getElementById('ai-input');
+  const q = ta.value.trim();
+  if (!q || !_aiOnline) return;
+  ta.value = '';
+  ta.style.height = '46px';
+  await aiAskInternal(q);
+}
+
+async function aiAsk(question) {
+  if (!_aiOnline) {
+    aiAppendMsg('system', 'Please test the server connection first.');
+    return;
+  }
+  await aiAskInternal(question);
+}
+
+async function aiAskInternal(question) {
+  const btn = document.getElementById('ai-send-btn');
+  btn.disabled = true;
+  aiAppendMsg('user', question);
+  aiSetTyping(true);
+
+  const url = document.getElementById('ai-server-url').value.trim().replace(/\/$/, '');
+
+  // Append to history
+  _aiHistory.push({ role: 'user', content: question });
+
+  try {
+    const res = await fetch(`${url}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context: aiBuildContext(),
+        history: _aiHistory.slice(-12), // last 6 turns
+      }),
+      signal: AbortSignal.timeout(60000),
+    });
+
+    aiSetTyping(false);
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Server error ${res.status}: ${txt}`);
+    }
+
+    const data = await res.json();
+    const answer = data.answer || '(empty response)';
+    _aiHistory.push({ role: 'assistant', content: answer });
+    aiAppendMsg('assistant', answer);
+  } catch(e) {
+    aiSetTyping(false);
+    aiAppendMsg('error', `Error: ${e.message}`);
+    _aiHistory.pop(); // remove failed user turn
+  } finally {
+    if (_aiOnline) btn.disabled = false;
+  }
+}
+
+function aiInputKeydown(e) {
+  // Shift+Enter = newline, Enter alone = send
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    aiSendMessage();
+  }
+  // Auto-grow textarea
+  const ta = e.target;
+  setTimeout(() => {
+    ta.style.height = '46px';
+    ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+  }, 0);
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+// Auto-init executive tab on load (it's the default active tab)
+window.addEventListener('DOMContentLoaded',()=>{
+  // Populate footer date range from data file
+  const fr=document.getElementById('footer-range');
+  if(fr && typeof DATE_RANGE!=='undefined') fr.textContent=DATE_RANGE;
+  if(!_init['executive']){ _init['executive']=true; setTimeout(()=>buildPage('executive'),20); }
+});
+</script>
+</body>
+</html>
