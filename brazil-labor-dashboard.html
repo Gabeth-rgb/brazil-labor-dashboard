@@ -179,7 +179,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 <div id="executive" class="page active">
   <div class="kpi-grid" id="exec-kpis"></div>
   <div class="row c2">
-    <div class="card"><h3>Persons with AH per Month &amp; % of HC <span class="pill blue">10% target</span></h3><div id="ch-exec-ah" class="ch"></div></div>
+    <div class="card"><h3>Occurrence Volume by Type per Month</h3><div id="ch-exec-ah" class="ch"></div></div>
     <div class="card"><h3>Monthly Persons: AH / Consecutive / RBW</h3><div id="ch-exec-multi" class="ch"></div></div>
   </div>
   <div class="row c1">
@@ -704,20 +704,14 @@ function buildExecutive(){
     kpi(null,totalConsUnique,'Total Consecutive Unique','Day violations','')+
     kpi(null,totalMH+'h','Total Missing Rest Hours','RBW deficit','yellow');
 
-  // Chart 1: Persons with AH per month + % of HC + target 10%
+  // Chart 1: Volume of occurrences — Additional Hours / Consecutive Workdays / Rest Between Workdays
   SVG.bar('ch-exec-ah',{
     labels:M,
-    series:[{label:'Persons with AH',data:AH.map(r=>r.persons),color:'#4589ff'}],
-    target:null
-  });
-  // overlay line for pct — we need a combo; use line chart on second call with dual axis approximation
-  SVG.line('ch-exec-ah',{
-    labels:M,
     series:[
-      {label:'Persons with AH',data:AH.map(r=>r.persons),color:'#4589ff',area:true},
-      {label:'% of HC',data:AH.map(r=>r.pct),color:'#f1c21b'}
-    ],
-    target:10
+      {label:'Additional Hours',data:AH.map(r=>r.persons),color:'#4589ff'},
+      {label:'Consecutive Workdays',data:CONS.map(r=>r.total),color:'#da1e28'},
+      {label:'Rest Between Workdays',data:RBW.map(r=>r.total),color:'#24a148'}
+    ]
   });
 
   // Chart 2: multi-line AH / Cons / RBW
