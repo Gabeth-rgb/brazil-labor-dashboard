@@ -787,8 +787,8 @@ function renderHeatmap(){
     },
     {
       label:'↳ Total Cases',     sub:true,
-      pct:{data:AH.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:AH.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:AH.map(r=>r.wkndTotal), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:AH.map(r=>r.wkndTotal), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     // ── RBW: unique persons + total cases ──
     {label:'RBW Violations', header:true},
