@@ -184,7 +184,13 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   </div>
   <div class="row c1">
     <div class="card">
-      <h3>Compliance Heatmap — Monthly Status by Category</h3>
+      <h3 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>Compliance Heatmap — Monthly Status by Category</span>
+        <span style="display:flex;gap:0;border:1px solid #dde1e7;border-radius:6px;overflow:hidden;font-size:11px;font-weight:600">
+          <button id="hm-btn-pct" onclick="setHeatmapMode('pct')" style="padding:4px 12px;border:none;cursor:pointer;background:#4589ff;color:#fff">%</button>
+          <button id="hm-btn-raw" onclick="setHeatmapMode('raw')" style="padding:4px 12px;border:none;cursor:pointer;background:#f0f2f5;color:#57606a">Raw</button>
+        </span>
+      </h3>
       <div class="ts"><table id="tbl-heatmap"></table></div>
     </div>
   </div>
@@ -705,12 +711,12 @@ function buildExecutive(){
     kpi(null,totalMH+'h','Total Missing Rest Hours','RBW deficit','yellow');
 
   // Chart 1: Volume of occurrences — Additional Hours / Consecutive Workdays / Rest Between Workdays
-  SVG.bar('ch-exec-ah',{
+  SVG.line('ch-exec-ah',{
     labels:M,
     series:[
-      {label:'Additional Hours',data:AH.map(r=>r.persons),color:'#4589ff'},
-      {label:'Consecutive Workdays',data:CONS.map(r=>r.total),color:'#da1e28'},
-      {label:'Rest Between Workdays',data:RBW.map(r=>r.total),color:'#24a148'}
+      {label:'AH Total Cases',data:AH.map(r=>r.persons),color:'#4589ff'},
+      {label:'Consecutive Total Cases',data:CONS.map(r=>r.total),color:'#da1e28'},
+      {label:'RBW Total Cases',data:RBW.map(r=>r.total),color:'#24a148'}
     ]
   });
 
@@ -725,20 +731,73 @@ function buildExecutive(){
   });
 
   // Heatmap table
-  const tbl=document.getElementById('tbl-heatmap');
-  const months12=M;
-  let html='<thead><tr><th>Category</th>'+months12.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
-  const rows=[
-    {label:'AH % HC',data:AH.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[10,15,20],cls:v=>v==null?'':v>20?'bc red':v>15?'bc yellow':v>10?'bc yellow':'bc green'},
-    {label:'Cat 1-2 % HC',data:AH.map(r=>r.p12),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[8,12,16],cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
-    {label:'Cat 3-10 % HC',data:AH.map(r=>r.p310),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[3,5,7],cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
-    {label:'Cat 11-20 % HC',data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%',thr:[0.3,0.6,1],cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
-    {label:'Wknd+Hol Viol.',data:AH.map(r=>r.wknd),fmt:v=>v,thr:[30,50,80],cls:v=>v>0?'bc red':'bc green'},
-    {label:'RBW % HC',data:RBW.map(r=>r.pct),fmt:v=>v==null?'N/A':v.toFixed(1)+'%',thr:[4,6,9],cls:v=>v==null?'':v>4?'bc red':'bc green'},
-    {label:'Cons. Unique',data:CONS.map(r=>r.unique),fmt:v=>v,thr:[20,35,45],cls:v=>v>0?'bc red':'bc green'},
+  window._hmMode = window._hmMode || 'pct';
+  renderHeatmap();
+}
+
+function setHeatmapMode(mode){
+  window._hmMode = mode;
+  document.getElementById('hm-btn-pct').style.background = mode==='pct' ? '#4589ff' : '#f0f2f5';
+  document.getElementById('hm-btn-pct').style.color      = mode==='pct' ? '#fff'     : '#57606a';
+  document.getElementById('hm-btn-raw').style.background = mode==='raw' ? '#4589ff' : '#f0f2f5';
+  document.getElementById('hm-btn-raw').style.color      = mode==='raw' ? '#fff'     : '#57606a';
+  renderHeatmap();
+}
+
+function renderHeatmap(){
+  const mode = window._hmMode || 'pct';
+  const tbl = document.getElementById('tbl-heatmap');
+  if(!tbl) return;
+  let html = '<thead><tr><th>Category</th>'+M.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
+
+  const rowsDef = [
+    {
+      label:'AH % HC / Persons',
+      pct:{data:AH.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>20?'bc red':v>10?'bc yellow':'bc green'},
+      raw:{data:AH.map(r=>r.persons),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'Cat 1-2 % HC / Cases',
+      pct:{data:AH.map(r=>r.p12),  fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
+      raw:{data:AH.map(r=>r.c12),  fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
+    },
+    {
+      label:'Cat 3-10 % HC / Cases',
+      pct:{data:AH.map(r=>r.p310), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
+      raw:{data:AH.map(r=>r.c310), fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
+    },
+    {
+      label:'Cat 11-20 % HC / Cases',
+      pct:{data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%', cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
+      raw:{data:AH.map(r=>r.c1120),fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'Cat 21+ Cases',
+      pct:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'Wknd+Hol Viol.',
+      pct:{data:AH.map(r=>r.wknd), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:AH.map(r=>r.wknd), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'RBW % HC / Unique',
+      pct:{data:RBW.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>4?'bc red':'bc green'},
+      raw:{data:RBW.map(r=>r.unique), fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'Cons. Unique / Total',
+      pct:{data:CONS.map(r=>r.unique),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:CONS.map(r=>r.total), fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+    },
   ];
-  rows.forEach(row=>{
-    html+=`<tr><td style="font-weight:600">${row.label}</td>`+row.data.map(v=>`<td><span class="${row.cls(v)}">${row.fmt(v)}</span></td>`).join('')+'</tr>';
+
+  rowsDef.forEach(row=>{
+    const side = mode==='pct' ? row.pct : row.raw;
+    html+=`<tr><td style="font-weight:600">${row.label}</td>`+
+      side.data.map(v=>`<td><span class="${side.cls(v)}">${side.fmt(v)}</span></td>`).join('')+
+    '</tr>';
   });
   html+='</tbody>';
   tbl.innerHTML=html;
