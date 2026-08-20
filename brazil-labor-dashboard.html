@@ -714,7 +714,7 @@ function buildExecutive(){
   SVG.line('ch-exec-ah',{
     labels:M,
     series:[
-      {label:'AH Total Cases',data:AH.map(r=>r.persons),color:'#4589ff'},
+      {label:'AH Total Cases',data:AH.map(r=>(r.c12||0)+(r.c310||0)+(r.c1120||0)+(r.c21||0)),color:'#4589ff'},
       {label:'Consecutive Total Cases',data:CONS.map(r=>r.total),color:'#da1e28'},
       {label:'RBW Total Cases',data:RBW.map(r=>r.total),color:'#24a148'}
     ]
@@ -754,22 +754,22 @@ function renderHeatmap(){
   // sub:true rows are rendered with indented, lighter label style
   const rowsDef = [
     {
-      label:'AH % HC / Persons',
+      label:'AH HC / Persons',
       pct:{data:AH.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>20?'bc red':v>10?'bc yellow':'bc green'},
       raw:{data:AH.map(r=>r.persons),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
     },
     {
-      label:'Cat 1-2 % HC / Cases',
+      label:'Cat 1-2 HC / Cases',
       pct:{data:AH.map(r=>r.p12),  fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
       raw:{data:AH.map(r=>r.c12),  fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
     },
     {
-      label:'Cat 3-10 % HC / Cases',
+      label:'Cat 3-10 HC / Cases',
       pct:{data:AH.map(r=>r.p310), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
       raw:{data:AH.map(r=>r.c310), fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
     },
     {
-      label:'Cat 11-20 % HC / Cases',
+      label:'Cat 11-20 HC / Cases',
       pct:{data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%', cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
       raw:{data:AH.map(r=>r.c1120),fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
     },
