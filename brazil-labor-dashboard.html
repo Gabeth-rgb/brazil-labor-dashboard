@@ -750,6 +750,8 @@ function renderHeatmap(){
   if(!tbl) return;
   let html = '<thead><tr><th>Category</th>'+M.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
 
+  // Each entry is either a normal row or a group header + sub-rows
+  // sub:true rows are rendered with indented, lighter label style
   const rowsDef = [
     {
       label:'AH % HC / Persons',
@@ -776,26 +778,54 @@ function renderHeatmap(){
       pct:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
       raw:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
     },
+    // ── Wknd+Hol: unique persons + total cases ──
+    {label:'Wknd+Hol Viol.', header:true},
     {
-      label:'Wknd+Hol Viol.',
-      pct:{data:AH.map(r=>r.wknd), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:AH.map(r=>r.wknd), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      label:'↳ Unique Persons',  sub:true,
+      pct:{data:AH.map(r=>r.wknd),    fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:AH.map(r=>r.wknd),    fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     {
-      label:'RBW % HC / Unique',
-      pct:{data:RBW.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>4?'bc red':'bc green'},
-      raw:{data:RBW.map(r=>r.unique), fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+      label:'↳ Total Cases',     sub:true,
+      pct:{data:AH.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:AH.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+    },
+    // ── RBW: unique persons + total cases ──
+    {label:'RBW Violations', header:true},
+    {
+      label:'↳ Unique Persons',  sub:true,
+      pct:{data:RBW.map(r=>r.pct),    fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>4?'bc red':'bc green'},
+      raw:{data:RBW.map(r=>r.unique), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
     },
     {
-      label:'Cons. Unique / Total',
-      pct:{data:CONS.map(r=>r.unique),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:CONS.map(r=>r.total), fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+      label:'↳ Total Cases',     sub:true,
+      pct:{data:RBW.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:RBW.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+    },
+    // ── Consecutive: unique persons + total cases ──
+    {label:'Consecutive Workdays', header:true},
+    {
+      label:'↳ Unique Persons',  sub:true,
+      pct:{data:CONS.map(r=>r.unique),fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:CONS.map(r=>r.unique),fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'↳ Total Cases',     sub:true,
+      pct:{data:CONS.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:CONS.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
   ];
 
   rowsDef.forEach(row=>{
+    if(row.header){
+      html+=`<tr style="background:#f7f8fa"><td colspan="${M.length+1}" style="font-weight:700;font-size:11px;color:#57606a;padding:6px 10px;border-bottom:1px solid #e5e7eb;letter-spacing:.3px;text-transform:uppercase">${row.label}</td></tr>`;
+      return;
+    }
     const side = mode==='pct' ? row.pct : row.raw;
-    html+=`<tr><td style="font-weight:600">${row.label}</td>`+
+    const labelStyle = row.sub
+      ? 'font-weight:500;color:#57606a;padding-left:22px'
+      : 'font-weight:600';
+    html+=`<tr><td style="${labelStyle}">${row.label}</td>`+
       side.data.map(v=>`<td><span class="${side.cls(v)}">${side.fmt(v)}</span></td>`).join('')+
     '</tr>';
   });
