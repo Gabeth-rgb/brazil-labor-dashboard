@@ -714,7 +714,7 @@ function buildExecutive(){
   SVG.line('ch-exec-ah',{
     labels:M,
     series:[
-      {label:'AH Total Cases',data:AH.map(r=>(r.c12||0)+(r.c310||0)+(r.c1120||0)+(r.c21||0)),color:'#4589ff'},
+      {label:'AH Total Cases',data:AH.map(r=>r.totalCases),color:'#4589ff'},
       {label:'Consecutive Total Cases',data:CONS.map(r=>r.total),color:'#da1e28'},
       {label:'RBW Total Cases',data:RBW.map(r=>r.total),color:'#24a148'}
     ]
