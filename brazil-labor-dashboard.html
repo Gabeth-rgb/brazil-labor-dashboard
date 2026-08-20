@@ -555,11 +555,12 @@ const SVG={
       svgText(svg,x,mT+cH+14,lbl,{'text-anchor':'end','font-size':'9','transform':`rotate(-35,${x},${mT+cH+14})`});
     });
 
-    // series
+    // series — pre-compute all point coords first so labels can avoid collisions
     const COLORS=['#4589ff','#da1e28','#24a148','#f1c21b','#8a3ffc','#0072c3'];
+    const allPts=series.map((sr,si)=>sr.data.map((v,i)=>[mL+i*xStep, mT+cH-(((v||0)/maxVal)*cH)]));
     series.forEach((sr,si)=>{
       const color=sr.color||COLORS[si%COLORS.length];
-      const pts=sr.data.map((v,i)=>[mL+i*xStep, mT+cH-(((v||0)/maxVal)*cH)]);
+      const pts=allPts[si];
       if(sr.area){
         const aPath=`M${pts[0][0]},${mT+cH} `+pts.map(p=>`L${p[0]},${p[1]}`).join(' ')+` L${pts[pts.length-1][0]},${mT+cH} Z`;
         el('path',{d:aPath,fill:color,opacity:'0.12'},svg);
@@ -573,9 +574,15 @@ const SVG={
         const title=document.createElementNS(NS,'title');
         title.textContent=`${sr.label} ${labels[i]}: ${v}`;
         c.appendChild(title);
-        // data label above the point
-        // stagger odd/even series slightly so labels don't stack on same x
-        const labelY=y-(si%2===0?7:15);
+        // data label: start 8px above the point, then nudge up further for each
+        // other series whose label would land within 10px of this one
+        let labelY=y-8;
+        allPts.forEach((ops,oi)=>{
+          if(oi===si) return;
+          const oy=ops[i][1];
+          // if the other series point is within 10px above us, push our label higher
+          if(Math.abs(oy-y)<10) labelY=Math.min(labelY, oy-8-(si>oi?10:0));
+        });
         svgText(svg,x,labelY,v,{
           'text-anchor':'middle',
           'font-size':'8.5',
@@ -777,6 +784,11 @@ function renderHeatmap(){
       label:'Cat 21+ Cases',
       pct:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
       raw:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+    },
+    {
+      label:'≤15min Cases',
+      pct:{data:MS.map(r=>{ const tot=r.leq+r.gt; return tot>0?+(r.leq/tot*100).toFixed(1):null; }), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>=50?'bc green':v>0?'bc yellow':'bc red'},
+      raw:{data:MS.map(r=>r.leq), fmt:v=>v, cls:()=>''}
     },
     // ── Wknd+Hol: unique persons + total cases ──
     {label:'Wknd+Hol Viol.', header:true},
