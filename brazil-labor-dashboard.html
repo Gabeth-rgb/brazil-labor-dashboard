@@ -782,8 +782,8 @@ function renderHeatmap(){
     {label:'Wknd+Hol Viol.', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
-      pct:{data:AH.map(r=>r.wknd),    fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:AH.map(r=>r.wknd),    fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:AH.map(r=>r.hc?+(r.wknd/r.hc*100).toFixed(1):null), fmt:v=>v==null?'N/A':v+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
+      raw:{data:AH.map(r=>r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'↳ Total Cases',     sub:true,
@@ -806,8 +806,8 @@ function renderHeatmap(){
     {label:'Consecutive Workdays', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
-      pct:{data:CONS.map(r=>r.unique),fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:CONS.map(r=>r.unique),fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:CONS.map(r=>r.pct), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
+      raw:{data:CONS.map(r=>r.unique), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'↳ Total Cases',     sub:true,
