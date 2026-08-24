@@ -995,14 +995,27 @@ function loadEmpChunks(){
 function populateFilterDropdowns(){
   if(!EMP_MONTH) return;
   const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
-  const mgrs=[...new Set(EMP_MONTH.map(r=>r.mgr))].sort();
   const fpSel=document.getElementById('flt-proj');
   const fmSel=document.getElementById('flt-mgr');
   const fmonSel=document.getElementById('flt-mon');
   projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
-  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
-  fpSel.onchange=fmSel.onchange=fmonSel.onchange=renderFiltered;
+  refreshManagerDropdown();
+  fpSel.onchange=()=>{ refreshManagerDropdown(); renderFiltered(); };
+  fmSel.onchange=fmonSel.onchange=renderFiltered;
+}
+
+function refreshManagerDropdown(){
+  if(!EMP_MONTH) return;
+  const proj=document.getElementById('flt-proj').value;
+  const fmSel=document.getElementById('flt-mgr');
+  const prevMgr=fmSel.value;
+  const subset=proj ? EMP_MONTH.filter(r=>r.project===proj) : EMP_MONTH;
+  const mgrs=[...new Set(subset.map(r=>r.mgr))].sort();
+  fmSel.innerHTML='<option value="">All Managers</option>';
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
+  // restore previous selection only if it still exists in the new list
+  if(prevMgr && mgrs.includes(prevMgr)) fmSel.value=prevMgr;
 }
 function populateMatrixDropdowns(){
   if(!EMP_MONTH) return;
