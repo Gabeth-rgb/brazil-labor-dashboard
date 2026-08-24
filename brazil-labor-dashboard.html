@@ -1053,12 +1053,23 @@ function refreshManagerDropdown(){
 function populateMatrixDropdowns(){
   if(!EMP_MONTH) return;
   const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
-  const mgrs=[...new Set(EMP_MONTH.map(r=>r.mgr))].sort();
   const mpSel=document.getElementById('mat-proj');
-  const mmSel=document.getElementById('mat-mgr');
   projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; mpSel.appendChild(o); });
+  refreshMatrixMgrDropdown();
+  mpSel.onchange=()=>{ refreshMatrixMgrDropdown(); renderMatrix(); };
+  document.getElementById('mat-mgr').onchange=renderMatrix;
+}
+
+function refreshMatrixMgrDropdown(){
+  if(!EMP_MONTH) return;
+  const proj=document.getElementById('mat-proj').value;
+  const mmSel=document.getElementById('mat-mgr');
+  const prevMgr=mmSel.value;
+  const subset=proj ? EMP_MONTH.filter(r=>r.project===proj) : EMP_MONTH;
+  const mgrs=[...new Set(subset.map(r=>r.mgr))].sort();
+  mmSel.innerHTML='<option value="">All Managers</option>';
   mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; mmSel.appendChild(o); });
-  mpSel.onchange=mmSel.onchange=renderMatrix;
+  if(prevMgr && mgrs.includes(prevMgr)) mmSel.value=prevMgr;
 }
 
 function ahCatBadge(t){
