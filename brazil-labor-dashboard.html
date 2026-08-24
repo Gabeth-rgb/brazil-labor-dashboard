@@ -423,7 +423,7 @@ const SVG={
     const{labels,series,target,stacked,horizontal}=opts;
     const W=600,H=260;
     const n=labels.length;
-    const mL=horizontal?140:44, mR=20, mT=20, mB=horizontal?30:(n>8?54:44);
+    const mL=horizontal?140:44, mR=20, mT=horizontal?20:28, mB=horizontal?30:(n>8?54:44);
     const cW=W-mL-mR, cH=H-mT-mB;
     const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
 
@@ -437,7 +437,7 @@ const SVG={
       series.forEach(sr=>sr.data.forEach(v=>{ if((v||0)>maxVal) maxVal=v||0; }));
     }
     if(target && target>maxVal) maxVal=target;
-    maxVal=maxVal*1.12 || 1;
+    maxVal=maxVal*1.18 || 1;
 
     // gridlines + axis
     const gridCount=4;
@@ -481,6 +481,8 @@ const SVG={
         const x0=mL+i*groupW+pad/2;
         const bW=stacked? groupW-pad : (groupW-pad)/nSeries;
         let yOff=0;
+        // track per-series bar tops for grouped data labels
+        const barTops=[];
         series.forEach((sr,si)=>{
           const v=sr.data[i]||0;
           const bH=(v/maxVal)*cH;
@@ -491,9 +493,35 @@ const SVG={
           title.textContent=`${sr.label}: ${v}`;
           bRect.appendChild(title);
           if(stacked) yOff+=bH;
+          barTops.push({bx,bW:stacked?groupW-pad:bW-2,by,bH,v,color:sr.color||'#4589ff'});
         });
-        // x label — always rotate when many bars to prevent overlap
+        // data labels above bars — one label per column
         const lx=mL+i*groupW+groupW/2;
+        if(stacked){
+          // total above the full stack
+          const total=series.reduce((s,sr)=>s+(sr.data[i]||0),0);
+          const stackTop=mT+cH-yOff; // yOff is total stacked height in px
+          if(total>0){
+            const disp=Number.isInteger(total)?total:total.toFixed(1);
+            svgText(svg,lx,stackTop-3,disp,{'text-anchor':'middle','font-size':'8.5','font-weight':'600','fill':'#1f2328'});
+          }
+        } else if(nSeries===1){
+          // single series: label above each bar
+          const {by,bH,v}=barTops[0];
+          if(bH>=4 && v){
+            const disp=Number.isInteger(v)?v:v.toFixed(1);
+            svgText(svg,lx,by-3,disp,{'text-anchor':'middle','font-size':'8.5','font-weight':'600','fill':barTops[0].color});
+          }
+        } else {
+          // grouped multi-series: label above each individual bar, offset by bar centre
+          barTops.forEach((bt,si)=>{
+            if(bt.bH<4 || !bt.v) return;
+            const bCx=bt.bx+bt.bW/2;
+            const disp=Number.isInteger(bt.v)?bt.v:bt.v.toFixed(1);
+            svgText(svg,bCx,bt.by-3,disp,{'text-anchor':'middle','font-size':'7.5','font-weight':'600','fill':bt.color});
+          });
+        }
+        // x label — always rotate when many bars to prevent overlap
         if(n>6){
           svgText(svg,lx,mT+cH+12,lbl,{'text-anchor':'end','font-size':'9','transform':`rotate(-40,${lx},${mT+cH+12})`});
         } else {
