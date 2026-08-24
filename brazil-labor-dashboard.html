@@ -502,7 +502,7 @@ const SVG={
           const total=series.reduce((s,sr)=>s+(sr.data[i]||0),0);
           const stackTop=mT+cH-yOff; // yOff is total stacked height in px
           if(total>0){
-            const disp=Number.isInteger(total)?total:total.toFixed(1);
+            const disp=(Number.isInteger(total)?total:total.toFixed(1))+'%';
             svgText(svg,lx,stackTop-3,disp,{'text-anchor':'middle','font-size':'8.5','font-weight':'600','fill':'#1f2328'});
           }
         } else if(nSeries===1){
