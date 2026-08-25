@@ -974,6 +974,8 @@ function buildAdditional(){
 // ─── TAB 3: AH ANALYSIS ──────────────────────────────────────────────────────
 let EMP_MONTH=null;
 let _empLoading=false;
+let matSortCol='total';
+let matSortAsc=false;
 
 function buildAHAnalysis(){
   // trigger load + show first sub-tab (filtered)
@@ -1103,6 +1105,16 @@ function renderFiltered(){
   if(rows.length>300) tbody.innerHTML+=`<tr><td colspan="10" style="color:#57606a;text-align:center">…and ${rows.length-300} more rows. Use filters to narrow results.</td></tr>`;
 }
 
+function toggleMatrixSort(col){
+  if(matSortCol===col){
+    matSortAsc=!matSortAsc;
+  } else {
+    matSortCol=col;
+    matSortAsc=(col==='name');
+  }
+  renderMatrix();
+}
+
 function renderMatrix(){
   if(!EMP_MONTH) return;
   const proj=document.getElementById('mat-proj').value;
@@ -1120,7 +1132,32 @@ function renderMatrix(){
     const prev=empMap[r.name][r.my]||0;
     empMap[r.name][r.my]=prev+r.total;
   });
-  const emps=Object.keys(empMap).sort();
+
+  // Calculate total occurrences for each employee
+  const empTotals={};
+  const emps=Object.keys(empMap);
+  emps.forEach(emp=>{
+    let tot=0;
+    MY.forEach(my=>{
+      tot+=(empMap[emp][my]||0);
+    });
+    empTotals[emp]=tot;
+  });
+
+  // Sort emps based on selected column and order
+  emps.sort((a,b)=>{
+    if(matSortCol==='total'){
+      const valA=empTotals[a];
+      const valB=empTotals[b];
+      if(valA!==valB){
+        return matSortAsc?valA-valB:valB-valA;
+      }
+      return a.localeCompare(b);
+    } else {
+      return matSortAsc?a.localeCompare(b):b.localeCompare(a);
+    }
+  });
+
   document.getElementById('mat-rc').textContent=`${emps.length} employees`;
 
   function cellCls(v){
@@ -1131,16 +1168,29 @@ function renderMatrix(){
   }
 
   const tbl=document.getElementById('tbl-matrix');
-  let html='<thead><tr><th>Employee</th>'+MY.map((my,i)=>`<th>${M[i]}</th>`).join('')+'</tr></thead><tbody>';
+  const empArrow=matSortCol==='name'?(matSortAsc?' ▲':' ▼'):'';
+  const totalArrow=matSortCol==='total'?(matSortAsc?' ▲':' ▼'):'';
+
+  let html=`<thead><tr>
+    <th onclick="toggleMatrixSort('name')" style="cursor:pointer;user-select:none">Employee${empArrow}</th>
+    ${MY.map((my,i)=>`<th>${M[i]}</th>`).join('')}
+    <th onclick="toggleMatrixSort('total')" style="cursor:pointer;user-select:none">Total${totalArrow}</th>
+  </tr></thead><tbody>`;
+
   const showEmps=emps.slice(0,200);
   showEmps.forEach(emp=>{
-    html+=`<tr><td>${emp}</td>`+MY.map(my=>{
+    const tot=empTotals[emp];
+    const cells=MY.map(my=>{
       const v=empMap[emp][my]||0;
       const cls=cellCls(v);
       return `<td class="${cls}">${v===0?'–':v>=11?`<span class="${cls}">${v}</span>`:v}</td>`;
-    }).join('')+'</tr>';
+    }).join('');
+    html+=`<tr><td>${emp}</td>${cells}<td style="font-weight:bold;text-align:center">${tot}</td></tr>`;
   });
-  if(emps.length>200) html+=`<tr><td colspan="${MY.length+1}" style="color:#57606a;text-align:center">…and ${emps.length-200} more. Use filters to narrow.</td></tr>`;
+
+  if(emps.length>200) {
+    html+=`<tr><td colspan="${MY.length+2}" style="color:#57606a;text-align:center">…and ${emps.length-200} more. Use filters to narrow.</td></tr>`;
+  }
   html+='</tbody>';
   tbl.innerHTML=html;
 }
