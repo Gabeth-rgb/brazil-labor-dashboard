@@ -351,6 +351,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <div class="sub-tab-bar">
     <button class="active" onclick="subNav('cons','overview')">Monthly Overview</button>
     <button onclick="subNav('cons','cases')">Filtered Case View</button>
+    <button onclick="subNav('cons','matrix')">Employee &times; Month Matrix</button>
   </div>
 
   <!-- Sub-tab A: Monthly Overview (existing charts + detail table) -->
@@ -402,6 +403,20 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <tbody id="tbl-cons-filtered-body"></tbody>
     </table></div>
   </div>
+
+  <!-- Sub-tab C: Employee × Month Matrix (CONS) -->
+  <div id="cons-matrix" class="sub-page">
+    <div class="fr" id="cons-mat-filt-bar">
+      <label>Project</label>
+      <select id="cons-mat-proj"><option value="">All Projects</option></select>
+      <label>Manager</label>
+      <select id="cons-mat-mgr"><option value="">All Managers</option></select>
+      <label>Employee</label>
+      <input id="cons-mat-name" type="text" placeholder="Search name…" oninput="renderConsMatrix()">
+    </div>
+    <div class="rc" id="cons-mat-rc" style="margin-bottom:8px"></div>
+    <div class="matrix-wrap"><table class="mt" id="tbl-cons-matrix"></table></div>
+  </div>
 </div>
 
 <!-- TAB 5: Rest Between Workdays -->
@@ -409,6 +424,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <div class="sub-tab-bar">
     <button class="active" onclick="subNav('rest','overview')">Monthly Overview</button>
     <button onclick="subNav('rest','cases')">Filtered Case View</button>
+    <button onclick="subNav('rest','matrix')">Employee &times; Month Matrix</button>
   </div>
 
   <!-- Sub-tab A: Monthly Overview -->
@@ -459,6 +475,20 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th id="rbw-th-total" onclick="toggleRbwSort()" style="cursor:pointer;user-select:none">Occurrences ▼</th><th>Unique</th></tr></thead>
       <tbody id="tbl-rbw-filtered-body"></tbody>
     </table></div>
+  </div>
+
+  <!-- Sub-tab C: Employee × Month Matrix (RBW) -->
+  <div id="rest-matrix" class="sub-page">
+    <div class="fr" id="rbw-mat-filt-bar">
+      <label>Project</label>
+      <select id="rbw-mat-proj"><option value="">All Projects</option></select>
+      <label>Manager</label>
+      <select id="rbw-mat-mgr"><option value="">All Managers</option></select>
+      <label>Employee</label>
+      <input id="rbw-mat-name" type="text" placeholder="Search name…" oninput="renderRbwMatrix()">
+    </div>
+    <div class="rc" id="rbw-mat-rc" style="margin-bottom:8px"></div>
+    <div class="matrix-wrap"><table class="mt" id="tbl-rbw-matrix"></table></div>
   </div>
 </div>
 
@@ -866,9 +896,11 @@ function subNav(tab,sub){
   document.querySelectorAll(`#${containerId} .sub-page`).forEach(p=>p.classList.remove('active'));
   const subEl=document.getElementById(`${tab}-${sub}`);
   if(subEl) subEl.classList.add('active');
-  // find clicked button
-  const subMap={filtered:0,matrix:1,split:2,overview:0,cases:1,rbw_overview:0,rbw_cases:1};
-  if(bar[subMap[sub]]) bar[subMap[sub]].classList.add('active');
+  // find clicked button — cons/rest have 3 tabs (overview=0,cases=1,matrix=2); ah has (filtered=0,matrix=1,split=2)
+  const subMap={filtered:0,split:2,overview:0,cases:1};
+  let btnIdx = subMap[sub];
+  if(sub==='matrix') btnIdx = (tab==='ah') ? 1 : 2;
+  if(bar[btnIdx!=null?btnIdx:0]) bar[btnIdx!=null?btnIdx:0].classList.add('active');
   if(!_init[`${tab}-${sub}`]){_init[`${tab}-${sub}`]=true; setTimeout(()=>buildSubPage(tab,sub),20);}
 }
 
@@ -892,10 +924,12 @@ function buildSubPage(tab,sub){
   if(tab==='cons') switch(sub){
     case 'overview': buildConsecutive(); break;
     case 'cases': buildConsCases(); break;
+    case 'matrix': buildConsMatrix(); break;
   }
   if(tab==='rest') switch(sub){
     case 'overview': buildRest(); break;
     case 'cases': buildRbwCases(); break;
+    case 'matrix': buildRbwMatrix(); break;
   }
 }
 
@@ -1428,6 +1462,12 @@ let splitMatSortCol='total';
 let splitMatSortAsc=false;
 let consSortAsc=false;
 let rbwSortAsc=false;
+let consMatSortCol='total';
+let consMatSortAsc=false;
+let rbwMatSortCol='total';
+let rbwMatSortAsc=false;
+let _consMatDropdownsPopulated=false;
+let _rbwMatDropdownsPopulated=false;
 let _splitMatrixDropdownsInitialized = false;
 
 function buildAHAnalysis(){
@@ -2097,6 +2137,198 @@ function renderRbwFiltered(){
     </tr>`;
   }).join('');
   if(rows.length>300) tbody.innerHTML+=`<tr><td colspan="6" style="color:#57606a;text-align:center">…and ${rows.length-300} more rows. Use filters to narrow results.</td></tr>`;
+}
+
+// ─── TAB 4c: CONSECUTIVE EMPLOYEE × MONTH MATRIX ─────────────────────────────
+function buildConsMatrix(){
+  if(!CONS_EMP || !CONS_EMP.length) return;
+  if(!_consMatDropdownsPopulated){
+    _consMatDropdownsPopulated=true;
+    const projs=[...new Set(CONS_EMP.map(r=>r.project))].sort();
+    const pSel=document.getElementById('cons-mat-proj');
+    projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; pSel.appendChild(o); });
+    refreshConsMatMgrDropdown();
+    pSel.onchange=()=>{ refreshConsMatMgrDropdown(); renderConsMatrix(); };
+    document.getElementById('cons-mat-mgr').onchange=renderConsMatrix;
+  }
+  renderConsMatrix();
+}
+
+function refreshConsMatMgrDropdown(){
+  if(!CONS_EMP) return;
+  const proj=document.getElementById('cons-mat-proj').value;
+  const mSel=document.getElementById('cons-mat-mgr');
+  const prevMgr=mSel.value;
+  const subset=proj ? CONS_EMP.filter(r=>r.project===proj) : CONS_EMP;
+  const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  mSel.innerHTML='<option value="">All Managers</option>';
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; mSel.appendChild(o); });
+  if(prevMgr && mgrs.includes(prevMgr)) mSel.value=prevMgr;
+}
+
+function toggleConsMatrixSort(col){
+  if(consMatSortCol===col){ consMatSortAsc=!consMatSortAsc; }
+  else { consMatSortCol=col; consMatSortAsc=(col==='name'); }
+  renderConsMatrix();
+}
+
+function renderConsMatrix(){
+  if(!CONS_EMP) return;
+  const proj=document.getElementById('cons-mat-proj').value;
+  const mgr=document.getElementById('cons-mat-mgr').value;
+  const name=(document.getElementById('cons-mat-name').value||'').toLowerCase();
+  let rows=CONS_EMP;
+  if(proj) rows=rows.filter(r=>r.project===proj);
+  if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
+  if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // pivot: employee → month → total occurrences
+  const empMap={};
+  rows.forEach(r=>{
+    if(!empMap[r.name]) empMap[r.name]={};
+    empMap[r.name][r.my]=(empMap[r.name][r.my]||0)+r.total;
+  });
+
+  const emps=Object.keys(empMap);
+  const empTotals={};
+  emps.forEach(emp=>{ empTotals[emp]=MY.reduce((s,my)=>s+(empMap[emp][my]||0),0); });
+
+  emps.sort((a,b)=>{
+    if(consMatSortCol==='total'){
+      const d=empTotals[b]-empTotals[a];
+      return consMatSortAsc?-d:d||a.localeCompare(b);
+    }
+    return consMatSortAsc?a.localeCompare(b):b.localeCompare(a);
+  });
+
+  document.getElementById('cons-mat-rc').textContent=`${emps.length} employees`;
+
+  function cellCls(v){
+    if(!v||v===0) return 'c0';
+    if(v<=2) return 'c1';
+    if(v<=10) return 'c3';
+    return 'chi';
+  }
+
+  const empArrow=consMatSortCol==='name'?(consMatSortAsc?' ▲':' ▼'):'';
+  const totalArrow=consMatSortCol==='total'?(consMatSortAsc?' ▲':' ▼'):'';
+
+  const tbl=document.getElementById('tbl-cons-matrix');
+  let html=`<thead><tr>
+    <th onclick="toggleConsMatrixSort('name')" style="cursor:pointer;user-select:none">Employee${empArrow}</th>
+    ${MY.map((my,i)=>`<th>${M[i]}</th>`).join('')}
+    <th onclick="toggleConsMatrixSort('total')" style="cursor:pointer;user-select:none">Total${totalArrow}</th>
+  </tr></thead><tbody>`;
+
+  emps.slice(0,200).forEach(emp=>{
+    const tot=empTotals[emp];
+    const cells=MY.map(my=>{
+      const v=empMap[emp][my]||0;
+      const cls=cellCls(v);
+      return `<td class="${cls}">${v===0?'–':v>=11?`<span class="${cls}">${v}</span>`:v}</td>`;
+    }).join('');
+    html+=`<tr><td>${emp}</td>${cells}<td style="font-weight:bold;text-align:center">${tot}</td></tr>`;
+  });
+
+  if(emps.length>200) html+=`<tr><td colspan="${MY.length+2}" style="color:#57606a;text-align:center">…and ${emps.length-200} more. Use filters to narrow.</td></tr>`;
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// ─── TAB 5c: RBW EMPLOYEE × MONTH MATRIX ─────────────────────────────────────
+function buildRbwMatrix(){
+  if(!RBW_EMP || !RBW_EMP.length) return;
+  if(!_rbwMatDropdownsPopulated){
+    _rbwMatDropdownsPopulated=true;
+    const projs=[...new Set(RBW_EMP.map(r=>r.project))].sort();
+    const pSel=document.getElementById('rbw-mat-proj');
+    projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; pSel.appendChild(o); });
+    refreshRbwMatMgrDropdown();
+    pSel.onchange=()=>{ refreshRbwMatMgrDropdown(); renderRbwMatrix(); };
+    document.getElementById('rbw-mat-mgr').onchange=renderRbwMatrix;
+  }
+  renderRbwMatrix();
+}
+
+function refreshRbwMatMgrDropdown(){
+  if(!RBW_EMP) return;
+  const proj=document.getElementById('rbw-mat-proj').value;
+  const mSel=document.getElementById('rbw-mat-mgr');
+  const prevMgr=mSel.value;
+  const subset=proj ? RBW_EMP.filter(r=>r.project===proj) : RBW_EMP;
+  const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  mSel.innerHTML='<option value="">All Managers</option>';
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; mSel.appendChild(o); });
+  if(prevMgr && mgrs.includes(prevMgr)) mSel.value=prevMgr;
+}
+
+function toggleRbwMatrixSort(col){
+  if(rbwMatSortCol===col){ rbwMatSortAsc=!rbwMatSortAsc; }
+  else { rbwMatSortCol=col; rbwMatSortAsc=(col==='name'); }
+  renderRbwMatrix();
+}
+
+function renderRbwMatrix(){
+  if(!RBW_EMP) return;
+  const proj=document.getElementById('rbw-mat-proj').value;
+  const mgr=document.getElementById('rbw-mat-mgr').value;
+  const name=(document.getElementById('rbw-mat-name').value||'').toLowerCase();
+  let rows=RBW_EMP;
+  if(proj) rows=rows.filter(r=>r.project===proj);
+  if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
+  if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // pivot: employee → month → total occurrences
+  const empMap={};
+  rows.forEach(r=>{
+    if(!empMap[r.name]) empMap[r.name]={};
+    empMap[r.name][r.my]=(empMap[r.name][r.my]||0)+r.total;
+  });
+
+  const emps=Object.keys(empMap);
+  const empTotals={};
+  emps.forEach(emp=>{ empTotals[emp]=MY.reduce((s,my)=>s+(empMap[emp][my]||0),0); });
+
+  emps.sort((a,b)=>{
+    if(rbwMatSortCol==='total'){
+      const d=empTotals[b]-empTotals[a];
+      return rbwMatSortAsc?-d:d||a.localeCompare(b);
+    }
+    return rbwMatSortAsc?a.localeCompare(b):b.localeCompare(a);
+  });
+
+  document.getElementById('rbw-mat-rc').textContent=`${emps.length} employees`;
+
+  function cellCls(v){
+    if(!v||v===0) return 'c0';
+    if(v<=2) return 'c1';
+    if(v<=10) return 'c3';
+    return 'chi';
+  }
+
+  const empArrow=rbwMatSortCol==='name'?(rbwMatSortAsc?' ▲':' ▼'):'';
+  const totalArrow=rbwMatSortCol==='total'?(rbwMatSortAsc?' ▲':' ▼'):'';
+
+  const tbl=document.getElementById('tbl-rbw-matrix');
+  let html=`<thead><tr>
+    <th onclick="toggleRbwMatrixSort('name')" style="cursor:pointer;user-select:none">Employee${empArrow}</th>
+    ${MY.map((my,i)=>`<th>${M[i]}</th>`).join('')}
+    <th onclick="toggleRbwMatrixSort('total')" style="cursor:pointer;user-select:none">Total${totalArrow}</th>
+  </tr></thead><tbody>`;
+
+  emps.slice(0,200).forEach(emp=>{
+    const tot=empTotals[emp];
+    const cells=MY.map(my=>{
+      const v=empMap[emp][my]||0;
+      const cls=cellCls(v);
+      return `<td class="${cls}">${v===0?'–':v>=11?`<span class="${cls}">${v}</span>`:v}</td>`;
+    }).join('');
+    html+=`<tr><td>${emp}</td>${cells}<td style="font-weight:bold;text-align:center">${tot}</td></tr>`;
+  });
+
+  if(emps.length>200) html+=`<tr><td colspan="${MY.length+2}" style="color:#57606a;text-align:center">…and ${emps.length-200} more. Use filters to narrow.</td></tr>`;
+  html+='</tbody>';
+  tbl.innerHTML=html;
 }
 
 // ─── TAB 5: REST BETWEEN WORKDAYS ────────────────────────────────────────────
