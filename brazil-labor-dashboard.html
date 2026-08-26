@@ -241,7 +241,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <div class="kpi-grid" id="ah-kpis"></div>
   <div class="row c2">
     <div class="card"><h3>Cat 1–2 / Cat 3–10 / Cat 11+ % of HC <span class="pill blue">target lines</span></h3><div id="ch-ah-cat" class="ch tall"></div></div>
-    <div class="card"><h3>Total Excess Hours per Month</h3><div id="ch-ah-exhrs" class="ch tall"></div></div>
+    <div class="card"><h3>Total AH Occurrences per Month</h3><div id="ch-ah-exhrs" class="ch tall"></div></div>
   </div>
   <div class="row c2">
     <div class="card"><h3>Weekend &amp; Holiday Violations per Month</h3><div id="ch-ah-wknd" class="ch"></div></div>
@@ -1274,14 +1274,14 @@ function buildAdditional(){
   const totalOcc=sum(AH,'persons');
   const totalExc=sum(AH,'exc');
   const totalWknd=sum(AH,'wknd');
-  const totalExHrs=sum(AH,'exHrs');
+  const totalCases=sum(AH,'totalCases');
   const totalC12=sum(AH,'c12');
   const totalC310=sum(AH,'c310');
   const totalC1120=sum(AH,'c1120');
   const totalC21=sum(AH,'c21');
   g.innerHTML=
     kpi(null,totalOcc,'Total Person-Months with AH','','red')+
-    kpi(null,totalExHrs+'h','Total Excess Hours','','red')+
+    kpi(null,totalCases,'Total AH Occurrences','All categories','red')+
     kpi(null,totalExc,'Total Excessive (>12h)','Events','red')+
     kpi(null,totalWknd,'Total Weekend+Holiday Violations','','yellow')+
     kpi(null,totalC12,'Cat 1-2 Person-Months','1-2 occurrences','')+
@@ -1301,10 +1301,10 @@ function buildAdditional(){
     target:10
   });
 
-  // Total excess hours
+  // Total AH occurrences
   SVG.bar('ch-ah-exhrs',{
     labels:M,
-    series:[{label:'Excess Hours',data:AH.map(r=>r.exHrs),color:'#8a3ffc'}]
+    series:[{label:'Total Occurrences',data:AH.map(r=>r.totalCases),color:'#8a3ffc'}]
   });
 
   // Weekend & Holiday
