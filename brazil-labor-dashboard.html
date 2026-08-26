@@ -194,7 +194,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 <!-- TAB 1: Executive Summary -->
 <div id="executive" class="page active">
   <!-- Executive Filters -->
-  <div class="fr" id="exec-filt-bar" style="display:none;margin-bottom:16px">
+  <div class="fr" id="exec-filt-bar" style="margin-bottom:16px">
     <label>Tower</label>
     <select id="exec-flt-tower"><option value="">All Towers</option></select>
     <label>Project</label>
@@ -944,14 +944,22 @@ function loadEmpChunksForExec(){
       EMP_MONTH = [];
       chunks.forEach(k=>{ if(window[k]) EMP_MONTH = EMP_MONTH.concat(window[k]); });
       _empLoading = false;
-      // Update note and re-render if exec tab is currently visible
+      // Update note
       const note = document.getElementById('exec-filter-note');
       if(note) note.textContent = '';
-      // If AH Analysis filtered tab was already init'd, skip its own load
-      _init['ah-filtered'] = true;
-      document.getElementById('filt-bar') && (document.getElementById('filt-bar').style.display='flex');
+      // Populate AH-Analysis filter dropdowns
       populateFilterDropdowns();
       populateMatrixDropdowns();
+      // Show filt-bar if AH Analysis was navigated to while load was in progress
+      const filtBar = document.getElementById('filt-bar');
+      const loader  = document.getElementById('emp-loader');
+      if(filtBar) filtBar.style.display = 'flex';
+      if(loader)  loader.style.display  = 'none';
+      // Render filtered table if AH filtered sub-tab is visible
+      const ahFiltPage = document.getElementById('ah-filtered');
+      if(ahFiltPage && ahFiltPage.classList.contains('active')){
+        renderFiltered();
+      }
       // Re-render exec to reflect AH data now filterable
       if(document.getElementById('executive').classList.contains('active')){
         renderExecutive();
@@ -977,8 +985,6 @@ function populateExecFilterDropdowns(){
 
   refreshExecProjDropdown();
   ftSel.onchange = ()=>{ refreshExecProjDropdown(); renderExecutive(); };
-
-  document.getElementById('exec-filt-bar').style.display = 'flex';
 
   // Show note while AH data not yet loaded
   if(!EMP_MONTH){
@@ -1434,6 +1440,11 @@ function buildAHAnalysis(){
       const filtBar=document.getElementById('filt-bar');
       if(loader) loader.style.display='none';
       if(filtBar) filtBar.style.display='flex';
+      // Always wire up handlers (populateFilterDropdowns may have been skipped by guard)
+      const ftSel=document.getElementById('flt-tower');
+      const fmonSel=document.getElementById('flt-mon');
+      if(ftSel && !ftSel.onchange) ftSel.onchange=()=>{ refreshProjectDropdown(); renderFiltered(); };
+      if(fmonSel && !fmonSel.onchange) fmonSel.onchange=renderFiltered;
       populateFilterDropdowns();
       renderFiltered();
       populateMatrixDropdowns();
