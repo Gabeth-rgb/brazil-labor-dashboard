@@ -54,6 +54,22 @@ tbody td{padding:7px 10px;border-bottom:1px solid #edf0f4;vertical-align:middle}
 .fr label{font-size:12px;font-weight:600;color:#57606a}
 .fr select,.fr input{padding:6px 10px;border:1px solid #dde1e7;border-radius:6px;font-size:13px;background:#fff}
 .fr input{width:230px}
+/* ── Multi-select widget ── */
+.msel{position:relative;display:inline-block}
+.msel-btn{padding:6px 28px 6px 10px;border:1px solid #dde1e7;border-radius:6px;font-size:13px;background:#fff;cursor:pointer;white-space:nowrap;min-width:160px;text-align:left;position:relative;user-select:none}
+.msel-btn::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:#57606a;pointer-events:none}
+.msel.open .msel-btn{border-color:#4589ff;outline:2px solid rgba(69,137,255,.2)}
+.msel-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:200;background:#fff;border:1px solid #dde1e7;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);min-width:220px;max-width:320px;max-height:260px;overflow-y:auto}
+.msel.open .msel-panel{display:block}
+.msel-search{width:100%;padding:7px 10px;border:none;border-bottom:1px solid #edf0f4;font-size:12px;outline:none;box-sizing:border-box}
+.msel-actions{display:flex;gap:0;border-bottom:1px solid #edf0f4}
+.msel-actions button{flex:1;padding:5px 8px;font-size:11px;background:none;border:none;cursor:pointer;color:#4589ff;font-weight:600}
+.msel-actions button:hover{background:#f0f6ff}
+.msel-actions button+button{border-left:1px solid #edf0f4}
+.msel-item{display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;font-size:12px}
+.msel-item:hover{background:#f7f9ff}
+.msel-item input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:#4589ff}
+.msel-empty{padding:10px;font-size:12px;color:#8a9099;text-align:center}
 .rc{font-size:12px;color:#57606a}
 .matrix-wrap{overflow:auto;max-height:480px;border:1px solid #e5e7eb;border-radius:6px}
 .mt{border-collapse:collapse;font-size:11px;white-space:nowrap}
@@ -230,9 +246,23 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <label>Tower</label>
       <select id="flt-tower"><option value="">All Towers</option></select>
       <label>Project</label>
-      <select id="flt-proj"><option value="">All Projects</option></select>
+      <div class="msel" id="msel-flt-proj">
+        <div class="msel-btn" id="msel-flt-proj-btn">All Projects</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-flt-proj-list"></div>
+        </div>
+      </div>
       <label>Manager</label>
-      <select id="flt-mgr"><option value="">All Managers</option></select>
+      <div class="msel" id="msel-flt-mgr">
+        <div class="msel-btn" id="msel-flt-mgr-btn">All Managers</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-flt-mgr-list"></div>
+        </div>
+      </div>
       <label>Month</label>
       <select id="flt-mon"><option value="">All Months</option></select>
       <label>Employee</label>
@@ -320,9 +350,23 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <label>Tower</label>
       <select id="cons-flt-tower"><option value="">All Towers</option></select>
       <label>Project</label>
-      <select id="cons-flt-proj"><option value="">All Projects</option></select>
+      <div class="msel" id="msel-cons-proj">
+        <div class="msel-btn" id="msel-cons-proj-btn">All Projects</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-cons-proj-list"></div>
+        </div>
+      </div>
       <label>Manager</label>
-      <select id="cons-flt-mgr"><option value="">All Managers</option></select>
+      <div class="msel" id="msel-cons-mgr">
+        <div class="msel-btn" id="msel-cons-mgr-btn">All Managers</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-cons-mgr-list"></div>
+        </div>
+      </div>
       <label>Month</label>
       <select id="cons-flt-mon"><option value="">All Months</option></select>
       <label>Employee</label>
@@ -364,9 +408,23 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <label>Tower</label>
       <select id="rbw-flt-tower"><option value="">All Towers</option></select>
       <label>Project</label>
-      <select id="rbw-flt-proj"><option value="">All Projects</option></select>
+      <div class="msel" id="msel-rbw-proj">
+        <div class="msel-btn" id="msel-rbw-proj-btn">All Projects</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-rbw-proj-list"></div>
+        </div>
+      </div>
       <label>Manager</label>
-      <select id="rbw-flt-mgr"><option value="">All Managers</option></select>
+      <div class="msel" id="msel-rbw-mgr">
+        <div class="msel-btn" id="msel-rbw-mgr-btn">All Managers</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-rbw-mgr-list"></div>
+        </div>
+      </div>
       <label>Month</label>
       <select id="rbw-flt-mon"><option value="">All Months</option></select>
       <label>Employee</label>
@@ -1043,6 +1101,90 @@ function buildAdditional(){
   tbl.innerHTML=html;
 }
 
+// ─── MULTI-SELECT WIDGET ─────────────────────────────────────────────────────
+// msPopulate(listId, btnId, items, onChangeCb)
+//   items: [{value, label}]   — replaces existing checkboxes; preserves checked values
+// msGetValues(listId) → string[]  — returns checked values (empty = "all")
+// msSetLabel(btnId, placeholder)  — updates button text based on selection
+function msPopulate(listId, btnId, items, onChangeCb, placeholder='All'){
+  const list=document.getElementById(listId);
+  if(!list) return;
+  // remember currently-checked values before rebuild
+  const prev=msGetValues(listId);
+  list.innerHTML='';
+  if(!items.length){ list.innerHTML=`<div class="msel-empty">No options</div>`; return; }
+  items.forEach(({value,label})=>{
+    const id=`${listId}_${value.replace(/[^a-z0-9]/gi,'_')}`;
+    const row=document.createElement('div'); row.className='msel-item';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.value=value; cb.id=id;
+    cb.checked=prev.includes(value);
+    cb.onchange=()=>{ msSetLabel(btnId,placeholder); if(onChangeCb) onChangeCb(); };
+    const lbl=document.createElement('label'); lbl.htmlFor=id; lbl.textContent=label; lbl.style.cursor='pointer'; lbl.style.flex='1';
+    row.appendChild(cb); row.appendChild(lbl);
+    list.appendChild(row);
+  });
+  msSetLabel(btnId,placeholder);
+}
+function msGetValues(listId){
+  const list=document.getElementById(listId);
+  if(!list) return [];
+  return [...list.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value);
+}
+function msSetLabel(btnId,placeholder='All'){
+  const btn=document.getElementById(btnId);
+  if(!btn) return;
+  const listId=btnId.replace('-btn','').replace('msel-','msel-')+'list'.replace(/btn$/,'list');
+  // derive list id: msel-flt-proj-btn → msel-flt-proj-list
+  const listElId=btnId.replace(/-btn$/,'-list');
+  const list=document.getElementById(listElId);
+  if(!list){ btn.textContent=placeholder; return; }
+  const checked=[...list.querySelectorAll('input[type=checkbox]:checked')];
+  const total=list.querySelectorAll('input[type=checkbox]').length;
+  if(!checked.length || checked.length===total){
+    btn.textContent=placeholder;
+  } else if(checked.length<=2){
+    btn.textContent=checked.map(c=>c.value).join(', ');
+  } else {
+    btn.textContent=`${checked[0].value} +${checked.length-1}`;
+  }
+}
+function msSearch(inputEl){
+  const panel=inputEl.closest('.msel-panel');
+  if(!panel) return;
+  const q=inputEl.value.toLowerCase();
+  panel.querySelectorAll('.msel-item').forEach(row=>{
+    const lbl=row.querySelector('label');
+    row.style.display=(lbl&&lbl.textContent.toLowerCase().includes(q))?'':'none';
+  });
+}
+function msAll(btnEl){
+  const list=btnEl.closest('.msel-panel').querySelector('.msel-list');
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{ if(cb.style.display!=='none'&&cb.closest('.msel-item').style.display!=='none') cb.checked=true; else if(!list.querySelector('.msel-search').value) cb.checked=true; });
+  // simpler: check all visible
+  list.querySelectorAll('.msel-item').forEach(row=>{ if(row.style.display!=='none'){ row.querySelector('input').checked=true; } });
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.dispatchEvent(new Event('change')));
+}
+function msNone(btnEl){
+  const list=btnEl.closest('.msel-panel').querySelector('.msel-list');
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{ cb.checked=false; });
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.dispatchEvent(new Event('change')));
+}
+// Close panels when clicking outside
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.msel')){
+    document.querySelectorAll('.msel.open').forEach(m=>m.classList.remove('open'));
+  }
+});
+// Toggle panel open/close on button click
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.msel-btn');
+  if(!btn) return;
+  const msel=btn.closest('.msel');
+  const wasOpen=msel.classList.contains('open');
+  document.querySelectorAll('.msel.open').forEach(m=>m.classList.remove('open'));
+  if(!wasOpen) msel.classList.add('open');
+});
+
 // ─── TAB 3: AH ANALYSIS ──────────────────────────────────────────────────────
 let EMP_MONTH=null;
 let _empLoading=false;
@@ -1109,46 +1251,40 @@ function loadEmpChunks(){
 function populateFilterDropdowns(){
   if(!EMP_MONTH) return;
   const towers=[...new Set(EMP_MONTH.map(r=>r.tower).filter(Boolean))].sort();
-  const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
   const ftSel=document.getElementById('flt-tower');
-  const fpSel=document.getElementById('flt-proj');
-  const fmSel=document.getElementById('flt-mgr');
   const fmonSel=document.getElementById('flt-mon');
   towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
-  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
-  refreshManagerDropdown();
-  ftSel.onchange=()=>{ refreshProjectDropdown(); refreshManagerDropdown(); renderFiltered(); };
-  fpSel.onchange=()=>{ refreshManagerDropdown(); renderFiltered(); };
-  fmSel.onchange=fmonSel.onchange=renderFiltered;
+  refreshProjectDropdown();
+  ftSel.onchange=()=>{ refreshProjectDropdown(); renderFiltered(); };
+  fmonSel.onchange=renderFiltered;
 }
 
 function refreshProjectDropdown(){
   if(!EMP_MONTH) return;
   const tower=document.getElementById('flt-tower').value;
-  const fpSel=document.getElementById('flt-proj');
-  const prevProj=fpSel.value;
-  const subset=tower ? EMP_MONTH.filter(r=>r.tower===tower) : EMP_MONTH;
+  let subset=EMP_MONTH;
+  if(tower) subset=subset.filter(r=>r.tower===tower);
   const projs=[...new Set(subset.map(r=>r.project))].sort();
-  fpSel.innerHTML='<option value="">All Projects</option>';
-  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
-  if(prevProj && projs.includes(prevProj)) fpSel.value=prevProj;
+  msPopulate('msel-flt-proj-list','msel-flt-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshManagerDropdown(); renderFiltered(); },
+    'All Projects');
+  refreshManagerDropdown();
 }
 
 function refreshManagerDropdown(){
   if(!EMP_MONTH) return;
   const tower=document.getElementById('flt-tower').value;
-  const proj=document.getElementById('flt-proj').value;
-  const fmSel=document.getElementById('flt-mgr');
-  const prevMgr=fmSel.value;
+  const projs=msGetValues('msel-flt-proj-list');
   let subset=EMP_MONTH;
   if(tower) subset=subset.filter(r=>r.tower===tower);
-  if(proj)  subset=subset.filter(r=>r.project===proj);
-  const mgrs=[...new Set(subset.map(r=>r.mgr))].sort();
-  fmSel.innerHTML='<option value="">All Managers</option>';
-  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
-  // restore previous selection only if it still exists in the new list
-  if(prevMgr && mgrs.includes(prevMgr)) fmSel.value=prevMgr;
+  if(projs.length) subset=subset.filter(r=>projs.includes(r.project));
+  const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  msPopulate('msel-flt-mgr-list','msel-flt-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderFiltered,
+    'All Managers');
 }
 function populateMatrixDropdowns(){
   if(!EMP_MONTH) return;
@@ -1193,14 +1329,14 @@ function toggleFilteredSort(col){
 function renderFiltered(){
   if(!EMP_MONTH) return;
   const tower=document.getElementById('flt-tower').value;
-  const proj=document.getElementById('flt-proj').value;
-  const mgr=document.getElementById('flt-mgr').value;
+  const projs=msGetValues('msel-flt-proj-list');
+  const mgrs=msGetValues('msel-flt-mgr-list');
   const mon=document.getElementById('flt-mon').value;
   const name=(document.getElementById('flt-name').value||'').toLowerCase();
   let rows=EMP_MONTH;
   if(tower) rows=rows.filter(r=>r.tower===tower);
-  if(proj) rows=rows.filter(r=>r.project===proj);
-  if(mgr) rows=rows.filter(r=>r.mgr===mgr);
+  if(projs.length) rows=rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows=rows.filter(r=>mgrs.includes(r.mgr));
   if(mon) rows=rows.filter(r=>r.my===mon);
   if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
 
@@ -1534,46 +1670,41 @@ function buildConsecutive(){
 function buildConsCases(){
   if(!CONS_EMP || !CONS_EMP.length) return;
   const towers=[...new Set(CONS_EMP.map(r=>r.tower).filter(Boolean))].sort();
-  const projs=[...new Set(CONS_EMP.map(r=>r.project))].sort();
   const ftSel=document.getElementById('cons-flt-tower');
-  const fpSel=document.getElementById('cons-flt-proj');
   const fmonSel=document.getElementById('cons-flt-mon');
   towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
-  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
   refreshConsProjDropdown();
-  refreshConsMgrDropdown();
-  ftSel.onchange=()=>{ refreshConsProjDropdown(); refreshConsMgrDropdown(); renderConsFiltered(); };
-  fpSel.onchange=()=>{ refreshConsMgrDropdown(); renderConsFiltered(); };
-  document.getElementById('cons-flt-mgr').onchange=fmonSel.onchange=renderConsFiltered;
+  ftSel.onchange=()=>{ refreshConsProjDropdown(); renderConsFiltered(); };
+  fmonSel.onchange=renderConsFiltered;
   renderConsFiltered();
 }
 
 function refreshConsProjDropdown(){
   if(!CONS_EMP) return;
   const tower=document.getElementById('cons-flt-tower').value;
-  const fpSel=document.getElementById('cons-flt-proj');
-  const prevProj=fpSel.value;
-  const subset=tower ? CONS_EMP.filter(r=>r.tower===tower) : CONS_EMP;
+  let subset=CONS_EMP;
+  if(tower) subset=subset.filter(r=>r.tower===tower);
   const projs=[...new Set(subset.map(r=>r.project))].sort();
-  fpSel.innerHTML='<option value="">All Projects</option>';
-  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
-  if(prevProj && projs.includes(prevProj)) fpSel.value=prevProj;
+  msPopulate('msel-cons-proj-list','msel-cons-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshConsMgrDropdown(); renderConsFiltered(); },
+    'All Projects');
+  refreshConsMgrDropdown();
 }
 
 function refreshConsMgrDropdown(){
   if(!CONS_EMP) return;
   const tower=document.getElementById('cons-flt-tower').value;
-  const proj=document.getElementById('cons-flt-proj').value;
-  const fmSel=document.getElementById('cons-flt-mgr');
-  const prevMgr=fmSel.value;
+  const projs=msGetValues('msel-cons-proj-list');
   let subset=CONS_EMP;
   if(tower) subset=subset.filter(r=>r.tower===tower);
-  if(proj)  subset=subset.filter(r=>r.project===proj);
+  if(projs.length) subset=subset.filter(r=>projs.includes(r.project));
   const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
-  fmSel.innerHTML='<option value="">All Managers</option>';
-  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
-  if(prevMgr && mgrs.includes(prevMgr)) fmSel.value=prevMgr;
+  msPopulate('msel-cons-mgr-list','msel-cons-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderConsFiltered,
+    'All Managers');
 }
 
 function toggleConsSort(){
@@ -1584,14 +1715,14 @@ function toggleConsSort(){
 function renderConsFiltered(){
   if(!CONS_EMP) return;
   const tower=document.getElementById('cons-flt-tower').value;
-  const proj=document.getElementById('cons-flt-proj').value;
-  const mgr=document.getElementById('cons-flt-mgr').value;
+  const projs=msGetValues('msel-cons-proj-list');
+  const mgrs=msGetValues('msel-cons-mgr-list');
   const mon=document.getElementById('cons-flt-mon').value;
   const name=(document.getElementById('cons-flt-name').value||'').toLowerCase();
   let rows=CONS_EMP;
   if(tower) rows=rows.filter(r=>r.tower===tower);
-  if(proj) rows=rows.filter(r=>r.project===proj);
-  if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
+  if(projs.length) rows=rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows=rows.filter(r=>mgrs.includes(r.mgr));
   if(mon)  rows=rows.filter(r=>r.my===mon);
   if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
 
@@ -1631,46 +1762,41 @@ function buildRbwCases(){
   _rbwCasesInit=true;
   if(!RBW_EMP || !RBW_EMP.length) return;
   const towers=[...new Set(RBW_EMP.map(r=>r.tower).filter(Boolean))].sort();
-  const projs=[...new Set(RBW_EMP.map(r=>r.project))].sort();
   const ftSel=document.getElementById('rbw-flt-tower');
-  const fpSel=document.getElementById('rbw-flt-proj');
   const fmonSel=document.getElementById('rbw-flt-mon');
   towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
-  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
   refreshRbwProjDropdown();
-  refreshRbwMgrDropdown();
-  ftSel.onchange=()=>{ refreshRbwProjDropdown(); refreshRbwMgrDropdown(); renderRbwFiltered(); };
-  fpSel.onchange=()=>{ refreshRbwMgrDropdown(); renderRbwFiltered(); };
-  document.getElementById('rbw-flt-mgr').onchange=fmonSel.onchange=renderRbwFiltered;
+  ftSel.onchange=()=>{ refreshRbwProjDropdown(); renderRbwFiltered(); };
+  fmonSel.onchange=renderRbwFiltered;
   renderRbwFiltered();
 }
 
 function refreshRbwProjDropdown(){
   if(!RBW_EMP) return;
   const tower=document.getElementById('rbw-flt-tower').value;
-  const fpSel=document.getElementById('rbw-flt-proj');
-  const prevProj=fpSel.value;
-  const subset=tower ? RBW_EMP.filter(r=>r.tower===tower) : RBW_EMP;
+  let subset=RBW_EMP;
+  if(tower) subset=subset.filter(r=>r.tower===tower);
   const projs=[...new Set(subset.map(r=>r.project))].sort();
-  fpSel.innerHTML='<option value="">All Projects</option>';
-  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
-  if(prevProj && projs.includes(prevProj)) fpSel.value=prevProj;
+  msPopulate('msel-rbw-proj-list','msel-rbw-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshRbwMgrDropdown(); renderRbwFiltered(); },
+    'All Projects');
+  refreshRbwMgrDropdown();
 }
 
 function refreshRbwMgrDropdown(){
   if(!RBW_EMP) return;
   const tower=document.getElementById('rbw-flt-tower').value;
-  const proj=document.getElementById('rbw-flt-proj').value;
-  const fmSel=document.getElementById('rbw-flt-mgr');
-  const prevMgr=fmSel.value;
+  const projs=msGetValues('msel-rbw-proj-list');
   let subset=RBW_EMP;
   if(tower) subset=subset.filter(r=>r.tower===tower);
-  if(proj)  subset=subset.filter(r=>r.project===proj);
+  if(projs.length) subset=subset.filter(r=>projs.includes(r.project));
   const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
-  fmSel.innerHTML='<option value="">All Managers</option>';
-  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
-  if(prevMgr && mgrs.includes(prevMgr)) fmSel.value=prevMgr;
+  msPopulate('msel-rbw-mgr-list','msel-rbw-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderRbwFiltered,
+    'All Managers');
 }
 
 function toggleRbwSort(){
@@ -1681,14 +1807,14 @@ function toggleRbwSort(){
 function renderRbwFiltered(){
   if(!RBW_EMP) return;
   const tower=document.getElementById('rbw-flt-tower').value;
-  const proj=document.getElementById('rbw-flt-proj').value;
-  const mgr=document.getElementById('rbw-flt-mgr').value;
+  const projs=msGetValues('msel-rbw-proj-list');
+  const mgrs=msGetValues('msel-rbw-mgr-list');
   const mon=document.getElementById('rbw-flt-mon').value;
   const name=(document.getElementById('rbw-flt-name').value||'').toLowerCase();
   let rows=RBW_EMP;
   if(tower) rows=rows.filter(r=>r.tower===tower);
-  if(proj) rows=rows.filter(r=>r.project===proj);
-  if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
+  if(projs.length) rows=rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows=rows.filter(r=>mgrs.includes(r.mgr));
   if(mon)  rows=rows.filter(r=>r.my===mon);
   if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
 
