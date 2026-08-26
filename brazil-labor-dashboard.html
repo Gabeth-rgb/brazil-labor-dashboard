@@ -238,7 +238,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     </div>
     <div class="rc" id="flt-rc" style="margin-bottom:8px"></div>
     <div class="ts"><table id="tbl-filtered">
-      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th>Total</th><th>≤15min</th><th>&gt;15min</th><th>Excessive</th><th>Wknd+Hol</th><th>Category</th></tr></thead>
+      <thead id="tbl-filtered-head"><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th id="flt-th-total" onclick="toggleFilteredSort('total')" style="cursor:pointer;user-select:none">Total</th><th id="flt-th-leq15" onclick="toggleFilteredSort('leq15')" style="cursor:pointer;user-select:none">≤15min</th><th id="flt-th-gt15" onclick="toggleFilteredSort('gt15')" style="cursor:pointer;user-select:none">&gt;15min</th><th id="flt-th-excessive" onclick="toggleFilteredSort('excessive')" style="cursor:pointer;user-select:none">Excessive</th><th id="flt-th-weekendViol" onclick="toggleFilteredSort('weekendViol')" style="cursor:pointer;user-select:none">Wknd+Hol</th><th>Category</th></tr></thead>
       <tbody id="tbl-filtered-body"></tbody>
     </table></div>
   </div>
@@ -270,6 +270,21 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <div class="card">
         <h3>≤15min Split by Project</h3>
         <div class="ts"><table id="tbl-split-proj"></table></div>
+      </div>
+    </div>
+    <div class="row c1">
+      <div class="card">
+        <h3>Employee × Month Split Matrix (≤15min / &gt;15min)</h3>
+        <div class="fr" id="split-mat-filt-bar" style="margin-bottom:12px">
+          <label>Project</label>
+          <select id="split-mat-proj"><option value="">All Projects</option></select>
+          <label>Manager</label>
+          <select id="split-mat-mgr"><option value="">All Managers</option></select>
+          <label>Employee</label>
+          <input id="split-mat-name" type="text" placeholder="Search name…" oninput="renderSplitMatrix()">
+        </div>
+        <div class="rc" id="split-mat-rc" style="margin-bottom:8px"></div>
+        <div class="matrix-wrap"><table class="mt" id="tbl-split-matrix"></table></div>
       </div>
     </div>
   </div>
@@ -311,7 +326,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     </div>
     <div class="rc" id="cons-flt-rc" style="margin-bottom:8px"></div>
     <div class="ts"><table id="tbl-cons-filtered">
-      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th>Occurrences</th><th>Unique</th></tr></thead>
+      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th id="cons-th-total" onclick="toggleConsSort()" style="cursor:pointer;user-select:none">Occurrences ▼</th><th>Unique</th></tr></thead>
       <tbody id="tbl-cons-filtered-body"></tbody>
     </table></div>
   </div>
@@ -976,6 +991,12 @@ let EMP_MONTH=null;
 let _empLoading=false;
 let matSortCol='total';
 let matSortAsc=false;
+let filtSortCol='total';
+let filtSortAsc=false;
+let splitMatSortCol='total';
+let splitMatSortAsc=false;
+let consSortAsc=false;
+let _splitMatrixDropdownsInitialized = false;
 
 function buildAHAnalysis(){
   // trigger load + show first sub-tab (filtered)
@@ -1082,6 +1103,16 @@ function ahCatBadge(t){
   return '';
 }
 
+function toggleFilteredSort(col){
+  if(filtSortCol===col){
+    filtSortAsc=!filtSortAsc;
+  } else {
+    filtSortCol=col;
+    filtSortAsc=false; // default: highest first
+  }
+  renderFiltered();
+}
+
 function renderFiltered(){
   if(!EMP_MONTH) return;
   const proj=document.getElementById('flt-proj').value;
@@ -1093,6 +1124,26 @@ function renderFiltered(){
   if(mgr) rows=rows.filter(r=>r.mgr===mgr);
   if(mon) rows=rows.filter(r=>r.my===mon);
   if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // Sort rows by selected column
+  const sortCols=['total','leq15','gt15','excessive','weekendViol'];
+  if(sortCols.includes(filtSortCol)){
+    rows=[...rows].sort((a,b)=>{
+      const va=a[filtSortCol]||0;
+      const vb=b[filtSortCol]||0;
+      if(va!==vb) return filtSortAsc?va-vb:vb-va;
+      return (a.name||'').localeCompare(b.name||'');
+    });
+  }
+
+  // Update header arrows
+  ['total','leq15','gt15','excessive','weekendViol'].forEach(col=>{
+    const th=document.getElementById('flt-th-'+col);
+    if(!th) return;
+    const labels={total:'Total',leq15:'≤15min',gt15:'>15min',excessive:'Excessive',weekendViol:'Wknd+Hol'};
+    th.textContent=labels[col]+(filtSortCol===col?(filtSortAsc?' ▲':' ▼'):'');
+  });
+
   document.getElementById('flt-rc').textContent=`${rows.length} records`;
   const tbody=document.getElementById('tbl-filtered-body');
   const show=rows.slice(0,300);
@@ -1230,6 +1281,133 @@ function buildSplit(){
   });
   html+='</tbody>';
   tbl.innerHTML=html;
+
+  // Initialize and render new Split Matrix
+  populateSplitMatrixDropdowns();
+  renderSplitMatrix();
+}
+
+function toggleSplitMatrixSort(col){
+  if(splitMatSortCol===col){
+    splitMatSortAsc=!splitMatSortAsc;
+  } else {
+    splitMatSortCol=col;
+    splitMatSortAsc=(col==='name');
+  }
+  renderSplitMatrix();
+}
+
+function populateSplitMatrixDropdowns(){
+  if(_splitMatrixDropdownsInitialized || !EMP_MONTH) return;
+  _splitMatrixDropdownsInitialized = true;
+  
+  const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
+  const smpSel=document.getElementById('split-mat-proj');
+  smpSel.innerHTML = '<option value="">All Projects</option>';
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; smpSel.appendChild(o); });
+  
+  refreshSplitMatrixMgrDropdown();
+  smpSel.onchange=()=>{ refreshSplitMatrixMgrDropdown(); renderSplitMatrix(); };
+  document.getElementById('split-mat-mgr').onchange=renderSplitMatrix;
+}
+
+function refreshSplitMatrixMgrDropdown(){
+  if(!EMP_MONTH) return;
+  const proj=document.getElementById('split-mat-proj').value;
+  const smmSel=document.getElementById('split-mat-mgr');
+  const prevMgr=smmSel.value;
+  const subset=proj ? EMP_MONTH.filter(r=>r.project===proj) : EMP_MONTH;
+  const mgrs=[...new Set(subset.map(r=>r.mgr))].sort();
+  smmSel.innerHTML='<option value="">All Managers</option>';
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; smmSel.appendChild(o); });
+  if(prevMgr && mgrs.includes(prevMgr)) smmSel.value=prevMgr;
+}
+
+function renderSplitMatrix(){
+  if(!EMP_MONTH) return;
+  const proj=document.getElementById('split-mat-proj').value;
+  const mgr=document.getElementById('split-mat-mgr').value;
+  const name=(document.getElementById('split-mat-name').value||'').toLowerCase();
+  let rows=EMP_MONTH;
+  if(proj) rows=rows.filter(r=>r.project===proj);
+  if(mgr) rows=rows.filter(r=>r.mgr===mgr);
+  if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // pivot: group by name and by month, but tracking BOTH leq15 and gt15
+  const empMap={};
+  rows.forEach(r=>{
+    if(!empMap[r.name]) empMap[r.name]={};
+    if(!empMap[r.name][r.my]) empMap[r.name][r.my]={ leq: 0, gt: 0 };
+    empMap[r.name][r.my].leq += (r.leq15 || 0);
+    empMap[r.name][r.my].gt += (r.gt15 || 0);
+  });
+
+  // Calculate total leq15 and gt15 occurrences for each employee
+  const empTotals={};
+  const emps=Object.keys(empMap);
+  emps.forEach(emp=>{
+    let totalLeq=0;
+    let totalGt=0;
+    MY.forEach(my=>{
+      const monthData = empMap[emp][my];
+      if(monthData) {
+        totalLeq += monthData.leq;
+        totalGt += monthData.gt;
+      }
+    });
+    empTotals[emp]={ leq: totalLeq, gt: totalGt, total: totalLeq + totalGt };
+  });
+
+  // Sort emps based on selected column and order
+  emps.sort((a,b)=>{
+    if(splitMatSortCol==='total'){
+      const valA=empTotals[a].total;
+      const valB=empTotals[b].total;
+      if(valA!==valB){
+        return splitMatSortAsc?valA-valB:valB-valA;
+      }
+      return a.localeCompare(b);
+    } else {
+      return splitMatSortAsc?a.localeCompare(b):b.localeCompare(a);
+    }
+  });
+
+  document.getElementById('split-mat-rc').textContent=`${emps.length} employees`;
+
+  const tbl=document.getElementById('tbl-split-matrix');
+  const empArrow=splitMatSortCol==='name'?(splitMatSortAsc?' ▲':' ▼'):'';
+  const totalArrow=splitMatSortCol==='total'?(splitMatSortAsc?' ▲':' ▼'):'';
+
+  let html=`<thead><tr>
+    <th onclick="toggleSplitMatrixSort('name')" style="cursor:pointer;user-select:none">Employee${empArrow}</th>
+    ${MY.map((my,i)=>`<th>${M[i]}</th>`).join('')}
+    <th onclick="toggleSplitMatrixSort('total')" style="cursor:pointer;user-select:none">Total${totalArrow}</th>
+  </tr></thead><tbody>`;
+
+  const showEmps=emps.slice(0,200);
+  showEmps.forEach(emp=>{
+    const tot=empTotals[emp];
+    const cells=MY.map(my=>{
+      const monthData=empMap[emp][my];
+      if(!monthData || (monthData.leq === 0 && monthData.gt === 0)) {
+        return `<td class="c0" style="text-align:center">–</td>`;
+      }
+      const leqText = monthData.leq > 0 ? `<span style="color:#b28600;font-weight:600">${monthData.leq}</span>` : `0`;
+      const gtText = monthData.gt > 0 ? `<span style="color:#da1e28;font-weight:600">${monthData.gt}</span>` : `0`;
+      return `<td style="text-align:center">${leqText} / ${gtText}</td>`;
+    }).join('');
+    
+    const totLeqText = tot.leq > 0 ? `<span style="color:#b28600;font-weight:700">${tot.leq}</span>` : `0`;
+    const totGtText = tot.gt > 0 ? `<span style="color:#da1e28;font-weight:700">${tot.gt}</span>` : `0`;
+
+    html+=`<tr><td>${emp}</td>${cells}<td style="font-weight:bold;text-align:center">${totLeqText} / ${totGtText}</td></tr>`;
+  });
+
+  if(emps.length>200) {
+    html+=`<tr><td colspan="${MY.length+2}" style="color:#57606a;text-align:center">…and ${emps.length-200} more. Use filters to narrow.</td></tr>`;
+  }
+  html+='</tbody>';
+  tbl.innerHTML=html;
 }
 
 // ─── TAB 4: CONSECUTIVE ──────────────────────────────────────────────────────
@@ -1301,6 +1479,11 @@ function refreshConsMgrDropdown(){
   if(prevMgr && mgrs.includes(prevMgr)) fmSel.value=prevMgr;
 }
 
+function toggleConsSort(){
+  consSortAsc=!consSortAsc;
+  renderConsFiltered();
+}
+
 function renderConsFiltered(){
   if(!CONS_EMP) return;
   const proj=document.getElementById('cons-flt-proj').value;
@@ -1312,6 +1495,18 @@ function renderConsFiltered(){
   if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
   if(mon)  rows=rows.filter(r=>r.my===mon);
   if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // Sort by occurrences
+  rows=[...rows].sort((a,b)=>{
+    const va=a.total||0, vb=b.total||0;
+    if(va!==vb) return consSortAsc?va-vb:vb-va;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  // Update header arrow
+  const th=document.getElementById('cons-th-total');
+  if(th) th.textContent='Occurrences'+(consSortAsc?' ▲':' ▼');
+
   document.getElementById('cons-flt-rc').textContent=`${rows.length} records`;
   const tbody=document.getElementById('tbl-cons-filtered-body');
   const show=rows.slice(0,300);
