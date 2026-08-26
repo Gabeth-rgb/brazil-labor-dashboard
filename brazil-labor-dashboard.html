@@ -193,6 +193,30 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
 <!-- TAB 1: Executive Summary -->
 <div id="executive" class="page active">
+  <!-- Executive Filters -->
+  <div class="fr" id="exec-filt-bar" style="display:none;margin-bottom:16px">
+    <label>Tower</label>
+    <select id="exec-flt-tower"><option value="">All Towers</option></select>
+    <label>Project</label>
+    <div class="msel" id="msel-exec-proj">
+      <div class="msel-btn" id="msel-exec-proj-btn">All Projects</div>
+      <div class="msel-panel">
+        <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+        <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+        <div class="msel-list" id="msel-exec-proj-list"></div>
+      </div>
+    </div>
+    <label>Manager</label>
+    <div class="msel" id="msel-exec-mgr">
+      <div class="msel-btn" id="msel-exec-mgr-btn">All Managers</div>
+      <div class="msel-panel">
+        <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+        <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+        <div class="msel-list" id="msel-exec-mgr-list"></div>
+      </div>
+    </div>
+    <span id="exec-filter-note" style="font-size:11px;color:#8a9099;align-self:center"></span>
+  </div>
   <div class="kpi-grid" id="exec-kpis"></div>
   <div class="row c2">
     <div class="card"><h3>Occurrence Volume by Type per Month</h3><div id="ch-exec-ah" class="ch"></div></div>
@@ -887,50 +911,249 @@ function sum(arr,key){ return arr.reduce((s,r)=>(s+(r[key]||0)),0); }
 function avg(arr,key){ const v=arr.filter(r=>r[key]!=null); return v.length?v.reduce((s,r)=>s+r[key],0)/v.length:null; }
 
 // ─── TAB 1: EXECUTIVE ────────────────────────────────────────────────────────
-function buildExecutive(){
-  const totalPersons=sum(AH,'persons');
-  const totalExc=sum(AH,'exc');
-  const totalWknd=sum(AH,'wknd');
-  const avgPct=avg(AH,'pct');
-  const totalRBWUnique=sum(RBW,'unique');
-  const totalConsUnique=sum(CONS,'unique');
-  const totalMH=sum(RBW,'mh');
-  const maxPct=Math.max(...AH.filter(r=>r.pct!=null).map(r=>r.pct));
 
-  const g=document.getElementById('exec-kpis');
-  g.innerHTML=
-    kpi(null,totalPersons,'Total AH Person-Months','Aug 2025 – Jul 2026','red')+
-    kpi(null,pct(avgPct),'Avg % HC with AH','Months with HC data','yellow')+
-    kpi(null,pct(maxPct),'Peak AH Rate','Sep/25','red')+
+// Exec filter state: uses same employee-level arrays as other tabs
+// AH: EMP_MONTH (loaded lazily), CONS: CONS_EMP, RBW: RBW_EMP
+let _execFiltersReady = false;
+
+function buildExecutive(){
+  window._hmMode = window._hmMode || 'pct';
+
+  // Populate filters from CONS_EMP / RBW_EMP (available immediately)
+  if(!_execFiltersReady){
+    _execFiltersReady = true;
+    populateExecFilterDropdowns();
+  }
+
+  // Kick off background EMP_MONTH load so AH filtering works (no-op if already loaded)
+  if(!EMP_MONTH && !_empLoading){
+    loadEmpChunksForExec();
+  }
+
+  renderExecutive();
+}
+
+// Background EMP load specifically for exec tab (silent — no loader UI)
+function loadEmpChunksForExec(){
+  if(_empLoading || EMP_MONTH) return;
+  _empLoading = true;
+  let loaded = 0;
+  const chunks = ['_empChunk0','_empChunk1','_empChunk2','_empChunk3','_empChunk4'];
+  function loadNext(i){
+    if(i>=5){
+      EMP_MONTH = [];
+      chunks.forEach(k=>{ if(window[k]) EMP_MONTH = EMP_MONTH.concat(window[k]); });
+      _empLoading = false;
+      // Update note and re-render if exec tab is currently visible
+      const note = document.getElementById('exec-filter-note');
+      if(note) note.textContent = '';
+      // If AH Analysis filtered tab was already init'd, skip its own load
+      _init['ah-filtered'] = true;
+      document.getElementById('filt-bar') && (document.getElementById('filt-bar').style.display='flex');
+      populateFilterDropdowns();
+      populateMatrixDropdowns();
+      // Re-render exec to reflect AH data now filterable
+      if(document.getElementById('executive').classList.contains('active')){
+        renderExecutive();
+      }
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = 'brazil-labor-emp-' + i + '.js';
+    s.onload  = ()=>{ loaded++; loadNext(i+1); };
+    s.onerror = ()=>{ loaded++; loadNext(i+1); };
+    document.head.appendChild(s);
+  }
+  loadNext(0);
+}
+
+function populateExecFilterDropdowns(){
+  // Merge tower/project/mgr from CONS_EMP + RBW_EMP (both always available)
+  const combined = (typeof CONS_EMP !== 'undefined' ? CONS_EMP : [])
+                    .concat(typeof RBW_EMP !== 'undefined' ? RBW_EMP : []);
+  const towers = [...new Set(combined.map(r=>r.tower).filter(Boolean))].sort();
+  const ftSel  = document.getElementById('exec-flt-tower');
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
+
+  refreshExecProjDropdown();
+  ftSel.onchange = ()=>{ refreshExecProjDropdown(); renderExecutive(); };
+
+  document.getElementById('exec-filt-bar').style.display = 'flex';
+
+  // Show note while AH data not yet loaded
+  if(!EMP_MONTH){
+    const note = document.getElementById('exec-filter-note');
+    if(note) note.textContent = '⏳ AH data loading…';
+  }
+}
+
+function refreshExecProjDropdown(){
+  const combined = (typeof CONS_EMP !== 'undefined' ? CONS_EMP : [])
+                    .concat(typeof RBW_EMP !== 'undefined' ? RBW_EMP : [])
+                    .concat(EMP_MONTH || []);
+  const tower = document.getElementById('exec-flt-tower').value;
+  let subset = combined;
+  if(tower) subset = subset.filter(r=>r.tower===tower);
+  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
+  msPopulate('msel-exec-proj-list','msel-exec-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshExecMgrDropdown(); renderExecutive(); },
+    'All Projects');
+  refreshExecMgrDropdown();
+}
+
+function refreshExecMgrDropdown(){
+  const combined = (typeof CONS_EMP !== 'undefined' ? CONS_EMP : [])
+                    .concat(typeof RBW_EMP !== 'undefined' ? RBW_EMP : [])
+                    .concat(EMP_MONTH || []);
+  const tower = document.getElementById('exec-flt-tower').value;
+  const projs = msGetValues('msel-exec-proj-list');
+  let subset = combined;
+  if(tower) subset = subset.filter(r=>r.tower===tower);
+  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
+  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  msPopulate('msel-exec-mgr-list','msel-exec-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderExecutive,
+    'All Managers');
+}
+
+// Compute per-month aggregates from a flat employee array
+// Works for both EMP_MONTH (AH data) and CONS_EMP / RBW_EMP
+function execAggFromEmp(empArr, type){
+  // type: 'ah' | 'cons' | 'rbw'
+  const byMonth = {};
+  MY.forEach(my=>{ byMonth[my]={ persons:0, totalCases:0, c12:0, c310:0, c1120:0, c21:0, wknd:0, exc:0, unique:0, total:0, mh:0 }; });
+  empArr.forEach(r=>{
+    const m = byMonth[r.my];
+    if(!m) return;
+    if(type==='ah'){
+      m.persons++;
+      m.totalCases += (r.total||0);
+      const t = r.total||0;
+      if(t>=21) m.c21++;
+      else if(t>=11) m.c1120++;
+      else if(t>=3) m.c310++;
+      else if(t>=1) m.c12++;
+      m.wknd += (r.weekendViol||0);
+      m.exc  += (r.excessive||0);
+    } else if(type==='cons'){
+      m.total  += (r.total||0);
+      m.unique += (r.unique||0);
+    } else if(type==='rbw'){
+      m.total  += (r.total||0);
+      m.unique += (r.unique||0);
+      m.mh     += (r.mh||0);
+    }
+  });
+  return MY.map(my=>{
+    const b = byMonth[my];
+    // HC comes from original aggregate (unchanged by person filters)
+    const orig = type==='ah' ? AH[MY.indexOf(my)] : type==='cons' ? CONS[MY.indexOf(my)] : RBW[MY.indexOf(my)];
+    const hc = orig ? orig.hc : null;
+    if(type==='ah'){
+      return {
+        hc, persons:b.persons, totalCases:b.totalCases,
+        pct: hc ? +(b.persons/hc*100).toFixed(2) : null,
+        c12:b.c12, p12: hc ? +(b.c12/hc*100).toFixed(2) : null,
+        c310:b.c310, p310: hc ? +(b.c310/hc*100).toFixed(2) : null,
+        c1120:b.c1120, p1120: hc ? +(b.c1120/hc*100).toFixed(2) : null,
+        c21:b.c21,
+        wknd:b.wknd, wkndTotal:b.wknd,
+        exc:b.exc, exHrs:0
+      };
+    } else if(type==='cons'){
+      return { hc, unique:b.unique, total:b.total, pct: hc ? +(b.unique/hc*100).toFixed(2) : null };
+    } else {
+      return { hc, unique:b.unique, total:b.total, pct: hc ? +(b.unique/hc*100).toFixed(2) : null, mh:b.mh };
+    }
+  });
+}
+
+function renderExecutive(){
+  const tower = document.getElementById('exec-flt-tower') ? document.getElementById('exec-flt-tower').value : '';
+  const projs = msGetValues('msel-exec-proj-list');
+  const mgrs  = msGetValues('msel-exec-mgr-list');
+  const filtered = tower || projs.length || mgrs.length;
+
+  // Compute filtered aggregates
+  let ahData   = AH;
+  let consData = CONS;
+  let rbwData  = RBW;
+
+  if(filtered){
+    // CONS and RBW: always filterable (CONS_EMP + RBW_EMP available)
+    let consSubset = typeof CONS_EMP !== 'undefined' ? CONS_EMP : [];
+    if(tower)        consSubset = consSubset.filter(r=>r.tower===tower);
+    if(projs.length) consSubset = consSubset.filter(r=>projs.includes(r.project));
+    if(mgrs.length)  consSubset = consSubset.filter(r=>mgrs.includes(r.mgr));
+    consData = execAggFromEmp(consSubset,'cons');
+
+    let rbwSubset = typeof RBW_EMP !== 'undefined' ? RBW_EMP : [];
+    if(tower)        rbwSubset = rbwSubset.filter(r=>r.tower===tower);
+    if(projs.length) rbwSubset = rbwSubset.filter(r=>projs.includes(r.project));
+    if(mgrs.length)  rbwSubset = rbwSubset.filter(r=>mgrs.includes(r.mgr));
+    rbwData = execAggFromEmp(rbwSubset,'rbw');
+
+    // AH: only filterable once EMP_MONTH is loaded
+    if(EMP_MONTH){
+      let ahSubset = EMP_MONTH;
+      if(tower)        ahSubset = ahSubset.filter(r=>r.tower===tower);
+      if(projs.length) ahSubset = ahSubset.filter(r=>projs.includes(r.project));
+      if(mgrs.length)  ahSubset = ahSubset.filter(r=>mgrs.includes(r.mgr));
+      ahData = execAggFromEmp(ahSubset,'ah');
+      const note = document.getElementById('exec-filter-note');
+      if(note) note.textContent = '';
+    } else {
+      const note = document.getElementById('exec-filter-note');
+      if(note) note.textContent = '⏳ AH data loading — AH metrics show full dataset';
+    }
+  }
+
+  const totalPersons    = sum(ahData,'persons');
+  const totalExc        = sum(ahData,'exc');
+  const totalWknd       = sum(ahData,'wknd');
+  const avgPctAH        = avg(ahData,'pct');
+  const totalRBWUnique  = sum(rbwData,'unique');
+  const totalConsUnique = sum(consData,'unique');
+  const totalMH         = sum(rbwData,'mh');
+  const maxPctArr       = ahData.filter(r=>r.pct!=null).map(r=>r.pct);
+  const maxPct          = maxPctArr.length ? Math.max(...maxPctArr) : 0;
+  const peakIdx         = ahData.findIndex(r=>r.pct===maxPct);
+  const peakLabel       = peakIdx>=0 ? M[peakIdx] : '';
+
+  const g = document.getElementById('exec-kpis');
+  g.innerHTML =
+    kpi(null,totalPersons,'Total AH Person-Months',DATE_RANGE,'red')+
+    kpi(null,pct(avgPctAH),'Avg % HC with AH','Months with HC data','yellow')+
+    kpi(null,pct(maxPct),'Peak AH Rate',peakLabel,'red')+
     kpi(null,totalExc,'Total Excessive (>12h) Events','Across all months','red')+
     kpi(null,totalWknd,'Total Weekend+Holiday Violations','','yellow')+
     kpi(null,totalRBWUnique,'Total RBW Unique Persons','Rest violations','red')+
     kpi(null,totalConsUnique,'Total Consecutive Unique','Day violations','')+
     kpi(null,totalMH+'h','Total Missing Rest Hours','RBW deficit','yellow');
 
-  // Chart 1: Volume of occurrences — Additional Hours / Consecutive Workdays / Rest Between Workdays
+  // Chart 1: Volume of occurrences
   SVG.line('ch-exec-ah',{
     labels:M,
     series:[
-      {label:'AH Total Cases',data:AH.map(r=>r.totalCases),color:'#4589ff'},
-      {label:'Consecutive Total Cases',data:CONS.map(r=>r.total),color:'#da1e28'},
-      {label:'RBW Total Cases',data:RBW.map(r=>r.total),color:'#24a148'}
+      {label:'AH Total Cases',data:ahData.map(r=>r.totalCases||0),color:'#4589ff'},
+      {label:'Consecutive Total Cases',data:consData.map(r=>r.total),color:'#da1e28'},
+      {label:'RBW Total Cases',data:rbwData.map(r=>r.total),color:'#24a148'}
     ]
   });
 
-  // Chart 2: multi-line AH / Cons / RBW
+  // Chart 2: Persons
   SVG.line('ch-exec-multi',{
     labels:M,
     series:[
-      {label:'AH Persons',data:AH.map(r=>r.persons),color:'#4589ff'},
-      {label:'Consecutive',data:CONS.map(r=>r.unique),color:'#da1e28'},
-      {label:'RBW Unique',data:RBW.map(r=>r.unique),color:'#24a148'}
+      {label:'AH Persons',data:ahData.map(r=>r.persons||0),color:'#4589ff'},
+      {label:'Consecutive',data:consData.map(r=>r.unique),color:'#da1e28'},
+      {label:'RBW Unique',data:rbwData.map(r=>r.unique),color:'#24a148'}
     ]
   });
 
-  // Heatmap table
-  window._hmMode = window._hmMode || 'pct';
-  renderHeatmap();
+  renderHeatmap(ahData, consData, rbwData);
 }
 
 function setHeatmapMode(mode){
@@ -939,13 +1162,16 @@ function setHeatmapMode(mode){
   document.getElementById('hm-btn-pct').style.color      = mode==='pct' ? '#fff'     : '#57606a';
   document.getElementById('hm-btn-raw').style.background = mode==='raw' ? '#4589ff' : '#f0f2f5';
   document.getElementById('hm-btn-raw').style.color      = mode==='raw' ? '#fff'     : '#57606a';
-  renderHeatmap();
+  renderExecutive();
 }
 
-function renderHeatmap(){
+function renderHeatmap(ahOverride, consOverride, rbwOverride){
   const mode = window._hmMode || 'pct';
   const tbl = document.getElementById('tbl-heatmap');
   if(!tbl) return;
+  const ahD   = ahOverride   || AH;
+  const consD = consOverride || CONS;
+  const rbwD  = rbwOverride  || RBW;
   let html = '<thead><tr><th>Category</th>'+M.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
 
   // Each entry is either a normal row or a group header + sub-rows
@@ -953,28 +1179,28 @@ function renderHeatmap(){
   const rowsDef = [
     {
       label:'AH HC / Persons',
-      pct:{data:AH.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>20?'bc red':v>10?'bc yellow':'bc green'},
-      raw:{data:AH.map(r=>r.persons),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:ahD.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>20?'bc red':v>10?'bc yellow':'bc green'},
+      raw:{data:ahD.map(r=>r.persons),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'Cat 1-2 HC / Cases',
-      pct:{data:AH.map(r=>r.p12),  fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
-      raw:{data:AH.map(r=>r.c12),  fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
+      pct:{data:ahD.map(r=>r.p12),  fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
+      raw:{data:ahD.map(r=>r.c12),  fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
     },
     {
       label:'Cat 3-10 HC / Cases',
-      pct:{data:AH.map(r=>r.p310), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
-      raw:{data:AH.map(r=>r.c310), fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
+      pct:{data:ahD.map(r=>r.p310), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
+      raw:{data:ahD.map(r=>r.c310), fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
     },
     {
       label:'Cat 11-20 HC / Cases',
-      pct:{data:AH.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%', cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
-      raw:{data:AH.map(r=>r.c1120),fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:ahD.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%', cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
+      raw:{data:ahD.map(r=>r.c1120),fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'Cat 21+ Cases',
-      pct:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:AH.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:ahD.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:ahD.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'≤15min Cases',
@@ -985,37 +1211,37 @@ function renderHeatmap(){
     {label:'Wknd+Hol Viol.', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
-      pct:{data:AH.map(r=>r.hc?+(r.wknd/r.hc*100).toFixed(1):null), fmt:v=>v==null?'N/A':v+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
-      raw:{data:AH.map(r=>r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:ahD.map(r=>r.hc?+(r.wknd/r.hc*100).toFixed(1):null), fmt:v=>v==null?'N/A':v+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
+      raw:{data:ahD.map(r=>r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'↳ Total Cases',     sub:true,
-      pct:{data:AH.map(r=>r.wkndTotal), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:AH.map(r=>r.wkndTotal), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:ahD.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:ahD.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     // ── RBW: unique persons + total cases ──
     {label:'RBW Violations', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
-      pct:{data:RBW.map(r=>r.pct),    fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>4?'bc red':'bc green'},
-      raw:{data:RBW.map(r=>r.unique), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:rbwD.map(r=>r.pct),    fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>4?'bc red':'bc green'},
+      raw:{data:rbwD.map(r=>r.unique), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'↳ Total Cases',     sub:true,
-      pct:{data:RBW.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:RBW.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:rbwD.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:rbwD.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     // ── Consecutive: unique persons + total cases ──
     {label:'Consecutive Workdays', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
-      pct:{data:CONS.map(r=>r.pct), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
-      raw:{data:CONS.map(r=>r.unique), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:consD.map(r=>r.pct), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
+      raw:{data:consD.map(r=>r.unique), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
     {
       label:'↳ Total Cases',     sub:true,
-      pct:{data:CONS.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:CONS.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      pct:{data:consD.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      raw:{data:consD.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
     },
   ];
 
@@ -1202,7 +1428,18 @@ function buildAHAnalysis(){
   // trigger load + show first sub-tab (filtered)
   if(!_init['ah-filtered']){
     _init['ah-filtered']=true;
-    loadEmpChunks();
+    if(EMP_MONTH){
+      // EMP_MONTH already loaded by exec tab background load
+      const loader=document.getElementById('emp-loader');
+      const filtBar=document.getElementById('filt-bar');
+      if(loader) loader.style.display='none';
+      if(filtBar) filtBar.style.display='flex';
+      populateFilterDropdowns();
+      renderFiltered();
+      populateMatrixDropdowns();
+    } else {
+      loadEmpChunks();
+    }
   }
   // split sub-tab charts only if already visited
 }
@@ -1248,8 +1485,10 @@ function loadEmpChunks(){
   loadNext(0);
 }
 
+let _filterDropdownsPopulated = false;
 function populateFilterDropdowns(){
-  if(!EMP_MONTH) return;
+  if(!EMP_MONTH || _filterDropdownsPopulated) return;
+  _filterDropdownsPopulated = true;
   const towers=[...new Set(EMP_MONTH.map(r=>r.tower).filter(Boolean))].sort();
   const ftSel=document.getElementById('flt-tower');
   const fmonSel=document.getElementById('flt-mon');
@@ -1286,8 +1525,10 @@ function refreshManagerDropdown(){
     renderFiltered,
     'All Managers');
 }
+let _matrixDropdownsPopulated = false;
 function populateMatrixDropdowns(){
-  if(!EMP_MONTH) return;
+  if(!EMP_MONTH || _matrixDropdownsPopulated) return;
+  _matrixDropdownsPopulated = true;
   const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
   const mpSel=document.getElementById('mat-proj');
   projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; mpSel.appendChild(o); });
