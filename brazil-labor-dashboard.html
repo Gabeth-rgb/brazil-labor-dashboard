@@ -334,16 +334,43 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
 <!-- TAB 5: Rest Between Workdays -->
 <div id="rest" class="page">
-  <div class="kpi-grid" id="rbw-kpis"></div>
-  <div class="row c2">
-    <div class="card"><h3>% of HC with RBW Violations <span class="pill red">4% target</span></h3><div id="ch-rbw-pct" class="ch"></div></div>
-    <div class="card"><h3>Missing Rest Hours per Month</h3><div id="ch-rbw-mh" class="ch"></div></div>
+  <div class="sub-tab-bar">
+    <button class="active" onclick="subNav('rest','overview')">Monthly Overview</button>
+    <button onclick="subNav('rest','cases')">Filtered Case View</button>
   </div>
-  <div class="row c1">
-    <div class="card">
-      <h3>Rest Between Workdays — Monthly Detail</h3>
-      <div class="ts"><table id="tbl-rbw-detail"></table></div>
+
+  <!-- Sub-tab A: Monthly Overview -->
+  <div id="rest-overview" class="sub-page active">
+    <div class="kpi-grid" id="rbw-kpis"></div>
+    <div class="row c2">
+      <div class="card"><h3>% of HC with RBW Violations <span class="pill red">4% target</span></h3><div id="ch-rbw-pct" class="ch"></div></div>
+      <div class="card"><h3>Missing Rest Hours per Month</h3><div id="ch-rbw-mh" class="ch"></div></div>
     </div>
+    <div class="row c1">
+      <div class="card">
+        <h3>Rest Between Workdays — Monthly Detail</h3>
+        <div class="ts"><table id="tbl-rbw-detail"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-tab B: Filtered Case View -->
+  <div id="rest-cases" class="sub-page">
+    <div class="fr" id="rbw-filt-bar">
+      <label>Project</label>
+      <select id="rbw-flt-proj"><option value="">All Projects</option></select>
+      <label>Manager</label>
+      <select id="rbw-flt-mgr"><option value="">All Managers</option></select>
+      <label>Month</label>
+      <select id="rbw-flt-mon"><option value="">All Months</option></select>
+      <label>Employee</label>
+      <input id="rbw-flt-name" type="text" placeholder="Search name…" oninput="renderRbwFiltered()">
+    </div>
+    <div class="rc" id="rbw-flt-rc" style="margin-bottom:8px"></div>
+    <div class="ts"><table id="tbl-rbw-filtered">
+      <thead><tr><th>Employee</th><th>Manager</th><th>Project</th><th>Month</th><th id="rbw-th-total" onclick="toggleRbwSort()" style="cursor:pointer;user-select:none">Occurrences ▼</th><th>Unique</th></tr></thead>
+      <tbody id="tbl-rbw-filtered-body"></tbody>
+    </table></div>
   </div>
 </div>
 
@@ -724,15 +751,18 @@ function nav(id){
   if(!_init[id]){_init[id]=true; setTimeout(()=>buildPage(id),20);}
 }
 function subNav(tab,sub){
-  // resolve the containing page element — ah uses #ah-analysis, cons uses #consecutive
-  const containerId = tab==='cons' ? 'consecutive' : `${tab}-analysis`;
+  // resolve the containing page element
+  let containerId;
+  if(tab==='cons') containerId='consecutive';
+  else if(tab==='rest') containerId='rest';
+  else containerId=`${tab}-analysis`;
   const bar=document.querySelectorAll(`#${containerId} .sub-tab-bar button`);
   bar.forEach(b=>b.classList.remove('active'));
   document.querySelectorAll(`#${containerId} .sub-page`).forEach(p=>p.classList.remove('active'));
   const subEl=document.getElementById(`${tab}-${sub}`);
   if(subEl) subEl.classList.add('active');
   // find clicked button
-  const subMap={filtered:0,matrix:1,split:2,overview:0,cases:1};
+  const subMap={filtered:0,matrix:1,split:2,overview:0,cases:1,rbw_overview:0,rbw_cases:1};
   if(bar[subMap[sub]]) bar[subMap[sub]].classList.add('active');
   if(!_init[`${tab}-${sub}`]){_init[`${tab}-${sub}`]=true; setTimeout(()=>buildSubPage(tab,sub),20);}
 }
@@ -743,7 +773,7 @@ function buildPage(id){
     case 'additional': buildAdditional(); break;
     case 'ah-analysis': buildAHAnalysis(); break;
     case 'consecutive': _init['cons-overview']=true; buildConsecutive(); break;
-    case 'rest': buildRest(); break;
+    case 'rest': _init['rest-overview']=true; buildRest(); break;
     case 'offenders': buildOffenders(); break;
     case 'projects': buildProjects(); break;
   }
@@ -757,6 +787,10 @@ function buildSubPage(tab,sub){
   if(tab==='cons') switch(sub){
     case 'overview': buildConsecutive(); break;
     case 'cases': buildConsCases(); break;
+  }
+  if(tab==='rest') switch(sub){
+    case 'overview': buildRest(); break;
+    case 'cases': buildRbwCases(); break;
   }
 }
 
@@ -996,6 +1030,7 @@ let filtSortAsc=false;
 let splitMatSortCol='total';
 let splitMatSortAsc=false;
 let consSortAsc=false;
+let rbwSortAsc=false;
 let _splitMatrixDropdownsInitialized = false;
 
 function buildAHAnalysis(){
@@ -1509,6 +1544,81 @@ function renderConsFiltered(){
 
   document.getElementById('cons-flt-rc').textContent=`${rows.length} records`;
   const tbody=document.getElementById('tbl-cons-filtered-body');
+  const show=rows.slice(0,300);
+  tbody.innerHTML=show.map(r=>{
+    const mLabel=M[MY.indexOf(r.my)]||r.my;
+    const uniqueBadge=r.unique>0?badge('yellow',r.unique+' unique'):'';
+    return `<tr>
+      <td>${r.name}</td>
+      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
+      <td>${r.project}</td>
+      <td>${mLabel}</td>
+      <td>${r.total}</td>
+      <td>${uniqueBadge}</td>
+    </tr>`;
+  }).join('');
+  if(rows.length>300) tbody.innerHTML+=`<tr><td colspan="6" style="color:#57606a;text-align:center">…and ${rows.length-300} more rows. Use filters to narrow results.</td></tr>`;
+}
+
+// ─── TAB 4c: RBW FILTERED CASE VIEW ─────────────────────────────────────────
+let _rbwCasesInit=false;
+function buildRbwCases(){
+  if(_rbwCasesInit) return;
+  _rbwCasesInit=true;
+  if(!RBW_EMP || !RBW_EMP.length) return;
+  const projs=[...new Set(RBW_EMP.map(r=>r.project))].sort();
+  const fpSel=document.getElementById('rbw-flt-proj');
+  const fmonSel=document.getElementById('rbw-flt-mon');
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
+  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
+  refreshRbwMgrDropdown();
+  fpSel.onchange=()=>{ refreshRbwMgrDropdown(); renderRbwFiltered(); };
+  document.getElementById('rbw-flt-mgr').onchange=fmonSel.onchange=renderRbwFiltered;
+  renderRbwFiltered();
+}
+
+function refreshRbwMgrDropdown(){
+  if(!RBW_EMP) return;
+  const proj=document.getElementById('rbw-flt-proj').value;
+  const fmSel=document.getElementById('rbw-flt-mgr');
+  const prevMgr=fmSel.value;
+  const subset=proj ? RBW_EMP.filter(r=>r.project===proj) : RBW_EMP;
+  const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  fmSel.innerHTML='<option value="">All Managers</option>';
+  mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
+  if(prevMgr && mgrs.includes(prevMgr)) fmSel.value=prevMgr;
+}
+
+function toggleRbwSort(){
+  rbwSortAsc=!rbwSortAsc;
+  renderRbwFiltered();
+}
+
+function renderRbwFiltered(){
+  if(!RBW_EMP) return;
+  const proj=document.getElementById('rbw-flt-proj').value;
+  const mgr=document.getElementById('rbw-flt-mgr').value;
+  const mon=document.getElementById('rbw-flt-mon').value;
+  const name=(document.getElementById('rbw-flt-name').value||'').toLowerCase();
+  let rows=RBW_EMP;
+  if(proj) rows=rows.filter(r=>r.project===proj);
+  if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
+  if(mon)  rows=rows.filter(r=>r.my===mon);
+  if(name) rows=rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  // Sort by occurrences
+  rows=[...rows].sort((a,b)=>{
+    const va=a.total||0, vb=b.total||0;
+    if(va!==vb) return rbwSortAsc?va-vb:vb-va;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  // Update header arrow
+  const th=document.getElementById('rbw-th-total');
+  if(th) th.textContent='Occurrences'+(rbwSortAsc?' ▲':' ▼');
+
+  document.getElementById('rbw-flt-rc').textContent=`${rows.length} records`;
+  const tbody=document.getElementById('tbl-rbw-filtered-body');
   const show=rows.slice(0,300);
   tbody.innerHTML=show.map(r=>{
     const mLabel=M[MY.indexOf(r.my)]||r.my;
