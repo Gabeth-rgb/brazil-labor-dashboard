@@ -227,6 +227,8 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <div id="ah-filtered" class="sub-page active">
     <div id="emp-loader" style="display:none;padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading employee data (0/5)…</div>
     <div class="fr" id="filt-bar" style="display:none">
+      <label>Tower</label>
+      <select id="flt-tower"><option value="">All Towers</option></select>
       <label>Project</label>
       <select id="flt-proj"><option value="">All Projects</option></select>
       <label>Manager</label>
@@ -315,6 +317,8 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <!-- Sub-tab B: Filtered Case View -->
   <div id="cons-cases" class="sub-page">
     <div class="fr" id="cons-filt-bar">
+      <label>Tower</label>
+      <select id="cons-flt-tower"><option value="">All Towers</option></select>
       <label>Project</label>
       <select id="cons-flt-proj"><option value="">All Projects</option></select>
       <label>Manager</label>
@@ -357,6 +361,8 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <!-- Sub-tab B: Filtered Case View -->
   <div id="rest-cases" class="sub-page">
     <div class="fr" id="rbw-filt-bar">
+      <label>Tower</label>
+      <select id="rbw-flt-tower"><option value="">All Towers</option></select>
       <label>Project</label>
       <select id="rbw-flt-proj"><option value="">All Projects</option></select>
       <label>Manager</label>
@@ -1102,23 +1108,42 @@ function loadEmpChunks(){
 
 function populateFilterDropdowns(){
   if(!EMP_MONTH) return;
+  const towers=[...new Set(EMP_MONTH.map(r=>r.tower).filter(Boolean))].sort();
   const projs=[...new Set(EMP_MONTH.map(r=>r.project))].sort();
+  const ftSel=document.getElementById('flt-tower');
   const fpSel=document.getElementById('flt-proj');
   const fmSel=document.getElementById('flt-mgr');
   const fmonSel=document.getElementById('flt-mon');
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
   projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
   refreshManagerDropdown();
+  ftSel.onchange=()=>{ refreshProjectDropdown(); refreshManagerDropdown(); renderFiltered(); };
   fpSel.onchange=()=>{ refreshManagerDropdown(); renderFiltered(); };
   fmSel.onchange=fmonSel.onchange=renderFiltered;
 }
 
+function refreshProjectDropdown(){
+  if(!EMP_MONTH) return;
+  const tower=document.getElementById('flt-tower').value;
+  const fpSel=document.getElementById('flt-proj');
+  const prevProj=fpSel.value;
+  const subset=tower ? EMP_MONTH.filter(r=>r.tower===tower) : EMP_MONTH;
+  const projs=[...new Set(subset.map(r=>r.project))].sort();
+  fpSel.innerHTML='<option value="">All Projects</option>';
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
+  if(prevProj && projs.includes(prevProj)) fpSel.value=prevProj;
+}
+
 function refreshManagerDropdown(){
   if(!EMP_MONTH) return;
+  const tower=document.getElementById('flt-tower').value;
   const proj=document.getElementById('flt-proj').value;
   const fmSel=document.getElementById('flt-mgr');
   const prevMgr=fmSel.value;
-  const subset=proj ? EMP_MONTH.filter(r=>r.project===proj) : EMP_MONTH;
+  let subset=EMP_MONTH;
+  if(tower) subset=subset.filter(r=>r.tower===tower);
+  if(proj)  subset=subset.filter(r=>r.project===proj);
   const mgrs=[...new Set(subset.map(r=>r.mgr))].sort();
   fmSel.innerHTML='<option value="">All Managers</option>';
   mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
@@ -1167,11 +1192,13 @@ function toggleFilteredSort(col){
 
 function renderFiltered(){
   if(!EMP_MONTH) return;
+  const tower=document.getElementById('flt-tower').value;
   const proj=document.getElementById('flt-proj').value;
   const mgr=document.getElementById('flt-mgr').value;
   const mon=document.getElementById('flt-mon').value;
   const name=(document.getElementById('flt-name').value||'').toLowerCase();
   let rows=EMP_MONTH;
+  if(tower) rows=rows.filter(r=>r.tower===tower);
   if(proj) rows=rows.filter(r=>r.project===proj);
   if(mgr) rows=rows.filter(r=>r.mgr===mgr);
   if(mon) rows=rows.filter(r=>r.my===mon);
@@ -1506,25 +1533,43 @@ function buildConsecutive(){
 // ─── TAB 4b: CONSECUTIVE FILTERED CASE VIEW ──────────────────────────────────
 function buildConsCases(){
   if(!CONS_EMP || !CONS_EMP.length) return;
+  const towers=[...new Set(CONS_EMP.map(r=>r.tower).filter(Boolean))].sort();
   const projs=[...new Set(CONS_EMP.map(r=>r.project))].sort();
+  const ftSel=document.getElementById('cons-flt-tower');
   const fpSel=document.getElementById('cons-flt-proj');
   const fmonSel=document.getElementById('cons-flt-mon');
-  // populate project
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
   projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
-  // populate month
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
+  refreshConsProjDropdown();
   refreshConsMgrDropdown();
+  ftSel.onchange=()=>{ refreshConsProjDropdown(); refreshConsMgrDropdown(); renderConsFiltered(); };
   fpSel.onchange=()=>{ refreshConsMgrDropdown(); renderConsFiltered(); };
   document.getElementById('cons-flt-mgr').onchange=fmonSel.onchange=renderConsFiltered;
   renderConsFiltered();
 }
 
+function refreshConsProjDropdown(){
+  if(!CONS_EMP) return;
+  const tower=document.getElementById('cons-flt-tower').value;
+  const fpSel=document.getElementById('cons-flt-proj');
+  const prevProj=fpSel.value;
+  const subset=tower ? CONS_EMP.filter(r=>r.tower===tower) : CONS_EMP;
+  const projs=[...new Set(subset.map(r=>r.project))].sort();
+  fpSel.innerHTML='<option value="">All Projects</option>';
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
+  if(prevProj && projs.includes(prevProj)) fpSel.value=prevProj;
+}
+
 function refreshConsMgrDropdown(){
   if(!CONS_EMP) return;
+  const tower=document.getElementById('cons-flt-tower').value;
   const proj=document.getElementById('cons-flt-proj').value;
   const fmSel=document.getElementById('cons-flt-mgr');
   const prevMgr=fmSel.value;
-  const subset=proj ? CONS_EMP.filter(r=>r.project===proj) : CONS_EMP;
+  let subset=CONS_EMP;
+  if(tower) subset=subset.filter(r=>r.tower===tower);
+  if(proj)  subset=subset.filter(r=>r.project===proj);
   const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
   fmSel.innerHTML='<option value="">All Managers</option>';
   mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
@@ -1538,11 +1583,13 @@ function toggleConsSort(){
 
 function renderConsFiltered(){
   if(!CONS_EMP) return;
+  const tower=document.getElementById('cons-flt-tower').value;
   const proj=document.getElementById('cons-flt-proj').value;
   const mgr=document.getElementById('cons-flt-mgr').value;
   const mon=document.getElementById('cons-flt-mon').value;
   const name=(document.getElementById('cons-flt-name').value||'').toLowerCase();
   let rows=CONS_EMP;
+  if(tower) rows=rows.filter(r=>r.tower===tower);
   if(proj) rows=rows.filter(r=>r.project===proj);
   if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
   if(mon)  rows=rows.filter(r=>r.my===mon);
@@ -1583,23 +1630,43 @@ function buildRbwCases(){
   if(_rbwCasesInit) return;
   _rbwCasesInit=true;
   if(!RBW_EMP || !RBW_EMP.length) return;
+  const towers=[...new Set(RBW_EMP.map(r=>r.tower).filter(Boolean))].sort();
   const projs=[...new Set(RBW_EMP.map(r=>r.project))].sort();
+  const ftSel=document.getElementById('rbw-flt-tower');
   const fpSel=document.getElementById('rbw-flt-proj');
   const fmonSel=document.getElementById('rbw-flt-mon');
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftSel.appendChild(o); });
   projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
   MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; fmonSel.appendChild(o); });
+  refreshRbwProjDropdown();
   refreshRbwMgrDropdown();
+  ftSel.onchange=()=>{ refreshRbwProjDropdown(); refreshRbwMgrDropdown(); renderRbwFiltered(); };
   fpSel.onchange=()=>{ refreshRbwMgrDropdown(); renderRbwFiltered(); };
   document.getElementById('rbw-flt-mgr').onchange=fmonSel.onchange=renderRbwFiltered;
   renderRbwFiltered();
 }
 
+function refreshRbwProjDropdown(){
+  if(!RBW_EMP) return;
+  const tower=document.getElementById('rbw-flt-tower').value;
+  const fpSel=document.getElementById('rbw-flt-proj');
+  const prevProj=fpSel.value;
+  const subset=tower ? RBW_EMP.filter(r=>r.tower===tower) : RBW_EMP;
+  const projs=[...new Set(subset.map(r=>r.project))].sort();
+  fpSel.innerHTML='<option value="">All Projects</option>';
+  projs.forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; fpSel.appendChild(o); });
+  if(prevProj && projs.includes(prevProj)) fpSel.value=prevProj;
+}
+
 function refreshRbwMgrDropdown(){
   if(!RBW_EMP) return;
+  const tower=document.getElementById('rbw-flt-tower').value;
   const proj=document.getElementById('rbw-flt-proj').value;
   const fmSel=document.getElementById('rbw-flt-mgr');
   const prevMgr=fmSel.value;
-  const subset=proj ? RBW_EMP.filter(r=>r.project===proj) : RBW_EMP;
+  let subset=RBW_EMP;
+  if(tower) subset=subset.filter(r=>r.tower===tower);
+  if(proj)  subset=subset.filter(r=>r.project===proj);
   const mgrs=[...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
   fmSel.innerHTML='<option value="">All Managers</option>';
   mgrs.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; fmSel.appendChild(o); });
@@ -1613,11 +1680,13 @@ function toggleRbwSort(){
 
 function renderRbwFiltered(){
   if(!RBW_EMP) return;
+  const tower=document.getElementById('rbw-flt-tower').value;
   const proj=document.getElementById('rbw-flt-proj').value;
   const mgr=document.getElementById('rbw-flt-mgr').value;
   const mon=document.getElementById('rbw-flt-mon').value;
   const name=(document.getElementById('rbw-flt-name').value||'').toLowerCase();
   let rows=RBW_EMP;
+  if(tower) rows=rows.filter(r=>r.tower===tower);
   if(proj) rows=rows.filter(r=>r.project===proj);
   if(mgr)  rows=rows.filter(r=>r.mgr===mgr);
   if(mon)  rows=rows.filter(r=>r.my===mon);
