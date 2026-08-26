@@ -492,7 +492,7 @@ const SVG={
     const{labels,series,target,stacked,horizontal}=opts;
     const W=600,H=260;
     const n=labels.length;
-    const mL=horizontal?140:44, mR=20, mT=horizontal?20:28, mB=horizontal?30:(n>8?54:44);
+    const mL=horizontal?140:44, mR=horizontal?34:20, mT=horizontal?20:28, mB=horizontal?30:(n>8?54:44);
     const cW=W-mL-mR, cH=H-mT-mB;
     const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'},container);
 
@@ -534,17 +534,34 @@ const SVG={
         const y0=mT+i*groupW+pad/2;
         const bH=stacked? groupW-pad : (groupW-pad)/nSeries;
         let xOff=0;
+        let maxBW=0; // track rightmost bar edge for stacked label
         series.forEach((sr,si)=>{
           const v=sr.data[i]||0;
           const bW=(v/maxVal)*cW;
           const by=stacked? y0 : y0+si*bH;
-          const bRect=el('rect',{x:mL+(stacked?xOff:0),y:by,width:bW,height:stacked?groupW-pad:bH-2,fill:sr.color||'#4589ff',rx:2},svg);
+          const barH=stacked?groupW-pad:bH-2;
+          const bRect=el('rect',{x:mL+(stacked?xOff:0),y:by,width:bW,height:barH,fill:sr.color||'#4589ff',rx:2},svg);
           const title=document.createElementNS(NS,'title');
           title.textContent=`${sr.label}: ${v}`;
           bRect.appendChild(title);
-          if(stacked) xOff+=bW;
+          if(stacked){ xOff+=bW; maxBW=xOff; }
+          // data label: right of each bar (grouped) or deferred to after loop (stacked)
+          if(!stacked && v>0){
+            const midY=by+barH/2+3.5;
+            const disp=Number.isInteger(v)?v:v.toFixed(1);
+            svgText(svg,mL+bW+4,midY,disp,{'font-size':'8','font-weight':'600','fill':sr.color||'#4589ff'});
+          }
         });
-        // label
+        // stacked: single total label at right edge of full stack
+        if(stacked){
+          const total=series.reduce((s,sr)=>s+(sr.data[i]||0),0);
+          if(total>0){
+            const midY=y0+(groupW-pad)/2+3.5;
+            const disp=Number.isInteger(total)?total:total.toFixed(1);
+            svgText(svg,mL+maxBW+4,midY,disp,{'font-size':'8','font-weight':'600','fill':'#1f2328'});
+          }
+        }
+        // y-axis label
         svgText(svg,mL-4,mT+i*groupW+groupW/2+3,lbl,{'text-anchor':'end','font-size':'9.5'});
       } else {
         const x0=mL+i*groupW+pad/2;
