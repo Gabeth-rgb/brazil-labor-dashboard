@@ -1212,90 +1212,151 @@ function renderHeatmap(ahOverride, consOverride, rbwOverride){
   const ahD   = ahOverride   || AH;
   const consD = consOverride || CONS;
   const rbwD  = rbwOverride  || RBW;
-  let html = '<thead><tr><th>Category</th>'+M.map(m=>`<th>${m}</th>`).join('')+'</tr></thead><tbody>';
+
+  // ── WoW: determine if a delta column should be shown ──────────────────────
+  // WOW_PREV is written by update-dashboard.mjs; it is null when no prev week
+  // exists yet (e.g. first upload of the month) or the month has rolled over.
+  const wow = (typeof WOW_PREV !== 'undefined' && WOW_PREV && WOW_PREV.month === M[M.length-1])
+    ? WOW_PREV : null;
+
+  // Formats a numeric delta for display.
+  // higherIsBad=true → increase = red, decrease = green (violation metrics)
+  // higherIsBad=false → increase = green, decrease = red (≤15min compliance)
+  function wowDelta(curr, prev, decimals, higherIsBad){
+    if(curr==null || prev==null) return {txt:'—', cls:''};
+    const d = curr - prev;
+    if(d === 0) return {txt:'—', cls:''};
+    const sign  = d > 0 ? '▲ +' : '▼ ';
+    const color = (d > 0) === higherIsBad ? 'color:#da1e28' : 'color:#24a148';
+    return {txt: sign + Math.abs(d).toFixed(decimals) + (decimals >= 0 ? '%' : ''), cls: color};
+  }
+  function wowRaw(curr, prev, higherIsBad){
+    if(curr==null || prev==null) return {txt:'—', cls:''};
+    const d = curr - prev;
+    if(d === 0) return {txt:'—', cls:''};
+    const sign  = d > 0 ? '▲ +' : '▼ ';
+    const color = (d > 0) === higherIsBad ? 'color:#da1e28' : 'color:#24a148';
+    return {txt: sign + Math.abs(d), cls: color};
+  }
+
+  // Header: month columns + optional Δ column
+  const wowMonthShort = wow ? wow.month.replace('/','&#8202;/&#8202;') : '';
+  const wowTh = wow ? `<th style="background:#f0f6ff;font-weight:700;white-space:nowrap">Δ ${wowMonthShort}</th>` : '';
+  const totalCols = M.length + 1 + (wow ? 1 : 0); // +1 for Category label col
+  let html = '<thead><tr><th>Category</th>'+M.map(m=>`<th>${m}</th>`).join('')+wowTh+'</tr></thead><tbody>';
 
   // Each entry is either a normal row or a group header + sub-rows
   // sub:true rows are rendered with indented, lighter label style
+  // wow:fn  is a function(wowPrev) → {txt, cls} for the delta cell
   const rowsDef = [
     {
       label:'AH HC / Persons',
       pct:{data:ahD.map(r=>r.pct),   fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>20?'bc red':v>10?'bc yellow':'bc green'},
-      raw:{data:ahD.map(r=>r.persons),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:ahD.map(r=>r.persons),fmt:v=>v,                              cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowDelta(ahD[ahD.length-1].pct,     wow.ah.pct,     1, true)  : null,
+      wowRaw: wow ? wowRaw  (ahD[ahD.length-1].persons, wow.ah.persons,    true)  : null,
     },
     {
       label:'Cat 1-2 HC / Cases',
       pct:{data:ahD.map(r=>r.p12),  fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>16?'bc red':v>10?'bc yellow':'bc green'},
-      raw:{data:ahD.map(r=>r.c12),  fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
+      raw:{data:ahD.map(r=>r.c12),  fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'},
+      wowPct: wow ? wowDelta(ahD[ahD.length-1].p12, wow.ah.p12, 1, true) : null,
+      wowRaw: wow ? wowRaw  (ahD[ahD.length-1].c12, wow.ah.c12,    true) : null,
     },
     {
       label:'Cat 3-10 HC / Cases',
       pct:{data:ahD.map(r=>r.p310), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>7?'bc red':v>5?'bc yellow':'bc green'},
-      raw:{data:ahD.map(r=>r.c310), fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'}
+      raw:{data:ahD.map(r=>r.c310), fmt:v=>v,                               cls:v=>v>0?'bc yellow':'bc green'},
+      wowPct: wow ? wowDelta(ahD[ahD.length-1].p310, wow.ah.p310, 1, true) : null,
+      wowRaw: wow ? wowRaw  (ahD[ahD.length-1].c310, wow.ah.c310,    true) : null,
     },
     {
       label:'Cat 11-20 HC / Cases',
       pct:{data:ahD.map(r=>r.p1120),fmt:v=>v==null?'N/A':v.toFixed(2)+'%', cls:v=>v==null?'':v>1?'bc red':v>0.5?'bc yellow':'bc green'},
-      raw:{data:ahD.map(r=>r.c1120),fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:ahD.map(r=>r.c1120),fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowDelta(ahD[ahD.length-1].p1120, wow.ah.p1120, 2, true) : null,
+      wowRaw: wow ? wowRaw  (ahD[ahD.length-1].c1120, wow.ah.c1120,     true) : null,
     },
     {
       label:'Cat 21+ Cases',
       pct:{data:ahD.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:ahD.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:ahD.map(r=>r.c21),  fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowRaw(ahD[ahD.length-1].c21, wow.ah.c21, true) : null,
+      wowRaw: wow ? wowRaw(ahD[ahD.length-1].c21, wow.ah.c21, true) : null,
     },
     {
       label:'≤15min Cases',
       pct:{data:MS.map(r=>{ const tot=r.leq+r.gt; return tot>0?+(r.leq/tot*100).toFixed(1):null; }), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>=50?'bc green':v>0?'bc yellow':'bc red'},
-      raw:{data:MS.map(r=>r.leq), fmt:v=>v, cls:()=>''}
+      raw:{data:MS.map(r=>r.leq), fmt:v=>v, cls:()=>''},
+      wowPct: wow ? (()=>{ const lm=MS[MS.length-1]; const tot=lm.leq+lm.gt; const ptot=wow.ms.leq+wow.ms.gt; return wowDelta(tot>0?+(lm.leq/tot*100):null, ptot>0?+(wow.ms.leq/ptot*100):null, 1, false); })() : null,
+      wowRaw: wow ? wowRaw(MS[MS.length-1].leq, wow.ms.leq, false) : null,
     },
     // ── Wknd+Hol: unique persons + total cases ──
     {label:'Wknd+Hol Viol.', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
       pct:{data:ahD.map(r=>r.hc?+(r.wknd/r.hc*100).toFixed(1):null), fmt:v=>v==null?'N/A':v+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
-      raw:{data:ahD.map(r=>r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:ahD.map(r=>r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? (()=>{ const last=ahD[ahD.length-1]; const cp=last.hc?+(last.wknd/last.hc*100).toFixed(1):null; const pp=last.hc?+(wow.ah.wknd/last.hc*100).toFixed(1):null; return wowDelta(cp,pp,1,true); })() : null,
+      wowRaw: wow ? wowRaw(ahD[ahD.length-1].wknd, wow.ah.wknd, true) : null,
     },
     {
       label:'↳ Total Cases',     sub:true,
       pct:{data:ahD.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:ahD.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:ahD.map(r=>r.wkndTotal||r.wknd), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowRaw(ahD[ahD.length-1].wkndTotal||ahD[ahD.length-1].wknd, wow.ah.wkndTotal||wow.ah.wknd, true) : null,
+      wowRaw: wow ? wowRaw(ahD[ahD.length-1].wkndTotal||ahD[ahD.length-1].wknd, wow.ah.wkndTotal||wow.ah.wknd, true) : null,
     },
     // ── RBW: unique persons + total cases ──
     {label:'RBW Violations', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
       pct:{data:rbwD.map(r=>r.pct),    fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>4?'bc red':'bc green'},
-      raw:{data:rbwD.map(r=>r.unique), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:rbwD.map(r=>r.unique), fmt:v=>v,                               cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowDelta(rbwD[rbwD.length-1].pct,    wow.rbw.pct,    1, true) : null,
+      wowRaw: wow ? wowRaw  (rbwD[rbwD.length-1].unique, wow.rbw.unique,    true) : null,
     },
     {
       label:'↳ Total Cases',     sub:true,
       pct:{data:rbwD.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:rbwD.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:rbwD.map(r=>r.total),  fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowRaw(rbwD[rbwD.length-1].total, wow.rbw.total, true) : null,
+      wowRaw: wow ? wowRaw(rbwD[rbwD.length-1].total, wow.rbw.total, true) : null,
     },
     // ── Consecutive: unique persons + total cases ──
     {label:'Consecutive Workdays', header:true},
     {
       label:'↳ Unique Persons',  sub:true,
       pct:{data:consD.map(r=>r.pct), fmt:v=>v==null?'N/A':v.toFixed(1)+'%', cls:v=>v==null?'':v>0?'bc red':'bc green'},
-      raw:{data:consD.map(r=>r.unique), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:consD.map(r=>r.unique), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowDelta(consD[consD.length-1].pct,    wow.cons.pct,    1, true) : null,
+      wowRaw: wow ? wowRaw  (consD[consD.length-1].unique, wow.cons.unique,    true) : null,
     },
     {
       label:'↳ Total Cases',     sub:true,
       pct:{data:consD.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
-      raw:{data:consD.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'}
+      raw:{data:consD.map(r=>r.total), fmt:v=>v, cls:v=>v>0?'bc red':'bc green'},
+      wowPct: wow ? wowRaw(consD[consD.length-1].total, wow.cons.total, true) : null,
+      wowRaw: wow ? wowRaw(consD[consD.length-1].total, wow.cons.total, true) : null,
     },
   ];
 
   rowsDef.forEach(row=>{
     if(row.header){
-      html+=`<tr style="background:#f7f8fa"><td colspan="${M.length+1}" style="font-weight:700;font-size:11px;color:#57606a;padding:6px 10px;border-bottom:1px solid #e5e7eb;letter-spacing:.3px;text-transform:uppercase">${row.label}</td></tr>`;
+      html+=`<tr style="background:#f7f8fa"><td colspan="${totalCols}" style="font-weight:700;font-size:11px;color:#57606a;padding:6px 10px;border-bottom:1px solid #e5e7eb;letter-spacing:.3px;text-transform:uppercase">${row.label}</td></tr>`;
       return;
     }
     const side = mode==='pct' ? row.pct : row.raw;
+    const wowCell = wow ? (mode==='pct' ? row.wowPct : row.wowRaw) : null;
+    const wowTd = wowCell
+      ? `<td style="background:#f0f6ff;font-size:12px;font-weight:700;white-space:nowrap;${wowCell.cls}">${wowCell.txt}</td>`
+      : '';
     const labelStyle = row.sub
       ? 'font-weight:500;color:#57606a;padding-left:22px'
       : 'font-weight:600';
     html+=`<tr><td style="${labelStyle}">${row.label}</td>`+
       side.data.map(v=>`<td><span class="${side.cls(v)}">${side.fmt(v)}</span></td>`).join('')+
+      wowTd+
     '</tr>';
   });
   html+='</tbody>';
