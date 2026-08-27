@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brazil PA Metrics — Compliance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;background:#f0f2f5;color:#1f2328;font-size:14px}
+header{background:#161616;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+header h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px}
+header .hbadge{background:#0f62fe;color:#fff;border-radius:4px;padding:3px 10px;font-size:11px;font-weight:700}
+nav{display:flex;gap:0;background:#1f1f1f;padding:0 24px;overflow-x:auto;border-bottom:1px solid #2e2e2e}
+nav button{background:none;border:none;color:#a8b0bb;padding:12px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap;transition:.15s}
+nav button.active{color:#fff;border-bottom-color:#4589ff}
+nav button:hover:not(.active){color:#ccc}
+.page{display:none;padding:20px 24px;max-width:1600px;margin:0 auto}
+.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:8px;padding:16px 18px;border-left:4px solid #4589ff;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.kpi.red{border-left-color:#da1e28}.kpi.yellow{border-left-color:#f1c21b}.kpi.green{border-left-color:#24a148}.kpi.purple{border-left-color:#8a3ffc}
+.kpi .val{font-size:26px;font-weight:700;line-height:1.1;margin-bottom:3px}
+.kpi .lbl{font-size:12px;color:#57606a;font-weight:500}
+.kpi .sub{font-size:11px;color:#8a9099;margin-top:3px}
+.row{display:grid;gap:14px;margin-bottom:16px}
+.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:1fr 1fr 1fr}.row.c1{grid-template-columns:1fr}
+.card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.card h3{font-size:13px;font-weight:600;margin-bottom:14px;color:#1f2328;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:12px}
+.pill.red{background:#fff1f1;color:#da1e28}.pill.yellow{background:#fef9e7;color:#b28600}
+.pill.green{background:#defbe6;color:#198038}.pill.blue{background:#edf5ff;color:#0043ce}
+.ch{width:100%;height:280px}
+.ch.tall{height:340px}.ch.short{height:200px}.ch.xtall{height:420px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:#f7f8fa;font-weight:600;padding:8px 10px;text-align:left;border-bottom:2px solid #e5e7eb;white-space:nowrap}
+tbody tr:hover{background:#f7f9ff}
+tbody td{padding:7px 10px;border-bottom:1px solid #edf0f4;vertical-align:middle}
+.ts{max-height:380px;overflow-y:auto;border-radius:6px;border:1px solid #e5e7eb}
+.bc{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.bc.red{background:#fff1f1;color:#da1e28}.bc.yellow{background:#fef9e7;color:#b28600}
+.bc.green{background:#defbe6;color:#198038}.bc.blue{background:#edf5ff;color:#0043ce}
+.hbox{border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;line-height:1.65;border-left:4px solid}
+.hbox.crit{background:#fff1f1;border-color:#da1e28;color:#5c1010}
+.hbox.warn{background:#fef9e7;border-color:#f1c21b;color:#5a4100}
+.hbox.ok{background:#defbe6;border-color:#24a148;color:#0a3d1f}
+.hbox.info{background:#edf5ff;border-color:#4589ff;color:#001141}
+.hbox strong{display:block;font-weight:700;margin-bottom:3px}
+.sec{font-size:15px;font-weight:700;margin-bottom:14px;margin-top:6px;border-left:3px solid #4589ff;padding-left:9px}
+.fr{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.fr label{font-size:12px;font-weight:600;color:#57606a}
+.fr select{padding:6px 10px;border:1px solid #dde1e7;border-radius:6px;font-size:13px;background:#fff}
+.pbar-wrap{background:#f0f2f5;border-radius:4px;height:8px;min-width:60px;display:inline-block;vertical-align:middle}
+.pbar-fill{background:#4589ff;height:8px;border-radius:4px}
+.pbar-fill.red{background:#da1e28}.pbar-fill.yellow{background:#f1c21b}.pbar-fill.green{background:#24a148}
+.range-filters{background:#fff;border-radius:8px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.range-filters label{font-size:12px;font-weight:600;color:#57606a}
+.range-filters select{padding:6px 10px;border:1px solid #dde1e7;border-radius:6px;font-size:13px;background:#fff}
+.matrix-wrap{overflow:auto;max-height:460px;border:1px solid #e5e7eb;border-radius:6px}
+.mt{border-collapse:collapse;font-size:11px;white-space:nowrap;width:100%}
+.mt th,.mt td{padding:6px 10px;border-bottom:1px solid #edf0f4;border-right:1px solid #edf0f4}
+.mt thead th{background:#f7f8fa;font-weight:600;position:sticky;top:0;z-index:2}
+.mt thead th:first-child{position:sticky;left:0;z-index:3;background:#f7f8fa}
+.mt tbody td:first-child{position:sticky;left:0;background:#fff;font-weight:600;z-index:1}
+.mt tbody tr:hover td{background:#f7f9ff}
+footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1px solid #e5e7eb;margin-top:20px}
+@media(max-width:860px){.row.c2,.row.c3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>&#127463;&#127479; Brazil PA Metrics — Compliance Dashboard</h1>
+  <span class="hbadge">Jan 2026 – Aug 2026 | 31 weeks | ~1459 practitioners</span>
+</header>
+<nav>
+  <button class="active" onclick="nav('executive')">&#128202; Executive Summary</button>
+  <button onclick="nav('trends')">&#128200; Trends &amp; Patterns</button>
+  <button onclick="nav('projects')">&#127959; By Project</button>
+  <button onclick="nav('managers')">&#128101; By Manager</button>
+  <button onclick="nav('hours')">&#8987; Hours Analysis</button>
+  <button onclick="nav('jrs')">&#127891; JRS &amp; Skills</button>
+  <button onclick="nav('insights')">&#128161; Key Insights</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 1: EXECUTIVE -->
+<div id="executive" class="page active">
+
+  <!-- Dynamic Range Filters -->
+  <div class="range-filters">
+    <label>&#128197; From Week</label>
+    <select id="exec-from" onchange="execUpdate()"></select>
+    <label>To Week</label>
+    <select id="exec-to" onchange="execUpdate()"></select>
+    <label>Tower</label>
+    <select id="exec-tower" onchange="execUpdate()"><option value="">All Towers</option></select>
+    <label>Project</label>
+    <select id="exec-project" onchange="execUpdate()"><option value="">All Projects</option></select>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-grid" id="exec-kpis"></div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>Overall Compliance by Metric <span class="pill blue" id="exec-week-lbl"></span></h3>
+      <div class="ch" id="ch-radar"></div>
+    </div>
+    <div class="card">
+      <h3>Compliance Score Evolution <span class="pill blue">Filtered range</span></h3>
+      <div class="ch" id="ch-exec-trend"></div>
+    </div>
+  </div>
+
+  <div class="row c3">
+    <div class="card">
+      <h3>CV Compliance &#128394;</h3>
+      <div class="ch short" id="ch-cv-gauge"></div>
+    </div>
+    <div class="card">
+      <h3>Hours Plan Compliance &#128337;</h3>
+      <div class="ch short" id="ch-hp-gauge"></div>
+    </div>
+    <div class="card">
+      <h3>Timely Claim &#10003;</h3>
+      <div class="ch short" id="ch-tc-gauge"></div>
+    </div>
+  </div>
+
+  <div class="row c3">
+    <div class="card">
+      <h3>Hours Plan Completeness &#128203;</h3>
+      <div class="ch short" id="ch-hpc-gauge"></div>
+    </div>
+    <div class="card">
+      <h3>JRS &amp; Skills &#127891;</h3>
+      <div class="ch short" id="ch-jrs-gauge"></div>
+    </div>
+    <div class="card">
+      <h3>No Future Assignment &#128683;</h3>
+      <div class="ch short" id="ch-una-gauge"></div>
+    </div>
+  </div>
+
+  <!-- Tower breakdown table -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>Tower Compliance Snapshot <span class="pill blue" id="exec-tower-lbl">Latest Week</span></h3>
+    <div class="ts">
+      <table>
+        <thead><tr><th>Tower</th><th>HC</th><th>CV Non-Comp</th><th>Hours Plan Non-Comp</th><th>Timely Claim Non-Comp</th><th>JRS Non-Comp</th><th>Skills Non-Comp</th></tr></thead>
+        <tbody id="tower-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 2: TRENDS -->
+<div id="trends" class="page">
+
+  <div class="range-filters">
+    <label>&#128197; From Week</label>
+    <select id="trend-from" onchange="trendUpdate()"></select>
+    <label>To Week</label>
+    <select id="trend-to" onchange="trendUpdate()"></select>
+  </div>
+
+  <div class="row c1">
+    <div class="card">
+      <h3>All Compliance Metrics — Weekly Trend</h3>
+      <div class="ch tall" id="ch-all-trends"></div>
+    </div>
+  </div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>CV Compliance Trend</h3>
+      <div class="ch" id="ch-cv-trend"></div>
+    </div>
+    <div class="card">
+      <h3>Hours Plan Compliance Trend</h3>
+      <div class="ch" id="ch-hp-trend"></div>
+    </div>
+  </div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>JRS Assessed vs Skills Proficiency Trend</h3>
+      <div class="ch" id="ch-jrs-trend"></div>
+    </div>
+    <div class="card">
+      <h3>Headcount per Week</h3>
+      <div class="ch" id="ch-hc-trend"></div>
+    </div>
+  </div>
+
+  <div class="row c1">
+    <div class="card">
+      <h3>Week-over-Week Delta (Compliance Change %) — Hours Plan</h3>
+      <div class="ch" id="ch-wow-hp"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 3: PROJECTS -->
+<div id="projects" class="page">
+
+  <div class="range-filters">
+    <label>&#128197; Week</label>
+    <select id="proj-week" onchange="projUpdate()"></select>
+  </div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>Hours Plan Non-Compliance by Project <span class="pill yellow">Top 15</span></h3>
+      <div class="ch tall" id="ch-proj-hp"></div>
+    </div>
+    <div class="card">
+      <h3>JRS + Skills Non-Compliance by Project <span class="pill red">Top 15</span></h3>
+      <div class="ch tall" id="ch-proj-jrs"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Full Project Compliance Matrix — Selected Week</h3>
+    <div class="matrix-wrap">
+      <table class="mt" id="proj-matrix">
+        <thead><tr><th>Project</th><th>HC</th><th>CV Non-Comp</th><th>CV %</th><th>Hrs Plan Non-Comp</th><th>HP %</th><th>Timely Claim Non-Comp</th><th>TC %</th><th>JRS Non-Comp</th><th>JRS %</th><th>Skills Non-Comp</th><th>Skills %</th></tr></thead>
+        <tbody id="proj-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 4: MANAGERS -->
+<div id="managers" class="page">
+
+  <div class="range-filters">
+    <label>&#128197; Week</label>
+    <select id="mgr-week" onchange="mgrUpdate()"></select>
+  </div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>Hours Plan Non-Compliance by Manager <span class="pill yellow">Top 15</span></h3>
+      <div class="ch tall" id="ch-mgr-hp"></div>
+    </div>
+    <div class="card">
+      <h3>JRS Non-Compliance by Manager <span class="pill red">Latest Week</span></h3>
+      <div class="ch tall" id="ch-mgr-jrs"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Full Manager Compliance Matrix — Selected Week</h3>
+    <div class="matrix-wrap">
+      <table class="mt" id="mgr-matrix">
+        <thead><tr><th>Manager</th><th>HC</th><th>CV Non-Comp</th><th>HP Non-Comp</th><th>HP %</th><th>TC Non-Comp</th><th>JRS Non-Comp</th><th>JRS %</th><th>Skills Non-Comp</th><th>Skills %</th></tr></thead>
+        <tbody id="mgr-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 5: HOURS -->
+<div id="hours" class="page">
+
+  <div class="row c2">
+    <div class="card">
+      <h3>Delta Actual vs Forecast Distribution <span class="pill blue">Latest Week</span></h3>
+      <div class="ch" id="ch-delta-dist"></div>
+    </div>
+    <div class="card">
+      <h3>Hours Plan Compliance Rate — Weekly Trend</h3>
+      <div class="ch" id="ch-hp-area"></div>
+    </div>
+  </div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>Hours Plan Completeness vs Plan Accuracy</h3>
+      <div class="ch" id="ch-hp-scatter"></div>
+    </div>
+    <div class="card">
+      <h3>No Future Assignment % — Weekly Trend</h3>
+      <div class="ch" id="ch-una-trend"></div>
+    </div>
+  </div>
+
+  <div class="row c1">
+    <div class="card">
+      <h3>Weekly Compliance Heatmap — Hours Plan &amp; Timely Claim</h3>
+      <div id="hours-heatmap-info" style="font-size:12px;color:#57606a;margin-bottom:8px">Each row = one metric. Color = compliance rate (green=high, red=low).</div>
+      <div class="ch" id="ch-hours-heatmap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 6: JRS & SKILLS -->
+<div id="jrs" class="page">
+
+  <div class="row c2">
+    <div class="card">
+      <h3>JRS &amp; Skills Compliance — Full Trend</h3>
+      <div class="ch tall" id="ch-jrs-full"></div>
+    </div>
+    <div class="card">
+      <h3>JRS Assessed vs Skills Proficiency Split</h3>
+      <div class="ch tall" id="ch-jrs-split"></div>
+    </div>
+  </div>
+
+  <div class="row c2">
+    <div class="card">
+      <h3>JRS Non-Compliance by Tower <span class="pill blue">Latest Week</span></h3>
+      <div class="ch" id="ch-jrs-tower"></div>
+    </div>
+    <div class="card">
+      <h3>Skills Non-Compliance by Tower <span class="pill blue">Latest Week</span></h3>
+      <div class="ch" id="ch-skills-tower"></div>
+    </div>
+  </div>
+
+  <!-- Pattern annotations -->
+  <div class="hbox warn">
+    <strong>&#9888; Seasonal Reset Pattern Detected</strong>
+    The dataset shows two distinct JRS &amp; Skills reset cycles: Jan–Feb 2026 the population started near 0% (6.3%) and climbed rapidly to 98%+ by March, then reset again in early July 2026 (dropping to 7%) before recovering. This corresponds to the annual/semi-annual IBM PBC/JRS evaluation cycles. Managers should pre-plan to clear their teams before the reset date.
+  </div>
+  <div class="hbox ok">
+    <strong>&#10003; JRS Assessed recovers faster than Skills Proficiency</strong>
+    Historically JRS Assessed compliance outpaces Skills Proficiency compliance during each cycle. The gap averages ~2–3 percentage points, suggesting practitioners deprioritize skill ratings after completing JRS.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 7: INSIGHTS -->
+<div id="insights" class="page">
+
+  <p class="sec">&#128269; Pattern Analysis &amp; Key Findings</p>
+
+  <div class="hbox crit">
+    <strong>&#128680; Hours Plan Compliance — Persistent Gap</strong>
+    Hours Plan compliance is the lowest-performing metric across the entire dataset, starting at 71.6% in Jan 2026 and slowly improving to ~91–92% by mid-2026 — still the most lagging indicator. Roughly 1 in 10 practitioners consistently deviates beyond the ±10–20% threshold every week. Projects Bradesco (31 non-comp), Vale (23), Itaú (18), and Vigação Lago team (17) account for a disproportionate share of violations in the latest week.
+  </div>
+
+  <div class="hbox warn">
+    <strong>&#9888; JRS &amp; Skills — Biannual Reset Volatility</strong>
+    Two full reset cycles were observed within the 31-week window. Each cycle starts near 0–7% and recovers to 95–98% over ~6 weeks. The recovery rate averages +15 pp/week. Late-recovering subgroups are consistently the same each cycle — flagging a structural training or awareness gap rather than a one-time event.
+  </div>
+
+  <div class="hbox warn">
+    <strong>&#9888; No Future Assignment — Structural Bench Risk</strong>
+    The "Upcoming Weeks With No Assignment" flag is elevated at ~82–83% flag-rate in April 2026 (meaning ~17% of practitioners had no future assignment during that period). This creates bench risk and potential billing gaps. The metric improved to ~98% by July 2026, but the April trough warrants investigation into project pipeline gaps.
+  </div>
+
+  <div class="hbox ok">
+    <strong>&#10003; CV Compliance — Near Perfect Sustained</strong>
+    CV compliance climbed from 93.4% in Jan to 99.8–100% by June 2026 and has remained above 99.5% since. This represents a clear, successful remediation campaign. The month-over-month improvement of ~1–1.5 pp/week during Feb is consistent with a targeted push.
+  </div>
+
+  <div class="hbox ok">
+    <strong>&#10003; Timely Claim — Consistently Strong</strong>
+    Timely claim compliance is the strongest metric, consistently above 96–100%. It declined slightly from 99.8% in Jan to ~96.7% by May-Jun, which may correlate with increased headcount on certain projects. McDonald's and Santander RE achieved 100% compliance in the latest week.
+  </div>
+
+  <div class="hbox info">
+    <strong>&#128202; Headcount Trend — Stable Workforce</strong>
+    Active practitioner headcount is stable at ~1,430–1,516 per week across 31 weeks. No significant spikes or drops outside ±5% variation, confirming the dataset represents a mature, steady-state workforce population.
+  </div>
+
+  <div class="hbox info">
+    <strong>&#128101; Manager Attention Areas</strong>
+    APARECIDA DA SILVA, MA (311 HC, 23 HP non-comp), CUSTODIO DA SILVEIRA NETO, NC (141 HC, 15 HP non-comp), and FAVERO, M (109 HC, 15 HP non-comp) have the highest absolute hours plan non-compliance counts in the latest week. These three managers together account for 53 of the total 131 HP non-compliance cases.
+  </div>
+
+  <p class="sec" style="margin-top:20px">&#128200; Metric Performance Summary (Latest Week vs First Week)</p>
+  <div class="ts">
+    <table>
+      <thead><tr><th>Metric</th><th>Week 1 (Jan 23)</th><th>Latest (Aug 21)</th><th>Change</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>CV Compliance</td><td>93.4%</td><td>99.8%</td><td style="color:#198038">+6.4 pp</td><td><span class="bc green">Excellent</span></td></tr>
+        <tr><td>Hours Plan Compliance</td><td>71.6%</td><td>90.8%</td><td style="color:#198038">+19.2 pp</td><td><span class="bc yellow">Improving</span></td></tr>
+        <tr><td>Timely Claim</td><td>99.8%</td><td>99.8%</td><td style="color:#57606a">0.0 pp</td><td><span class="bc green">Stable</span></td></tr>
+        <tr><td>Hours Plan Completeness</td><td>96.7%</td><td>98.9%</td><td style="color:#198038">+2.2 pp</td><td><span class="bc green">Good</span></td></tr>
+        <tr><td>JRS &amp; Skills Combined</td><td>6.3%</td><td>96.2%</td><td style="color:#198038">+89.9 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
+        <tr><td>JRS Assessed</td><td>6.3%</td><td>96.5%</td><td style="color:#198038">+90.2 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
+        <tr><td>Skills Proficiency</td><td>6.4%</td><td>96.9%</td><td style="color:#198038">+90.5 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
+        <tr><td>No Future Assignment</td><td>3.4% flagged</td><td>1.6% flagged</td><td style="color:#198038">-1.8 pp</td><td><span class="bc green">Improved</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Brazil PA Metrics Compliance Dashboard &nbsp;|&nbsp; Data: Jan–Aug 2026 &nbsp;|&nbsp; 45,236 records across 31 weeks &nbsp;|&nbsp; Made with IBM Bob</footer>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// EMBEDDED DATA  (generated from PA Metrics Raw Data.xlsx)
+// Generated: 2026-08-27T21:50:00.173Z
+// ════════════════════════════════════════════════════════════════════
+const WEEKS = [
+  "2026-01-23",
+  "2026-01-30",
+  "2026-02-06",
+  "2026-02-13",
+  "2026-02-20",
+  "2026-02-27",
+  "2026-03-06",
+  "2026-03-13",
+  "2026-03-20",
+  "2026-03-27",
+  "2026-04-03",
+  "2026-04-10",
+  "2026-04-17",
+  "2026-04-24",
+  "2026-05-01",
+  "2026-05-08",
+  "2026-05-15",
+  "2026-05-22",
+  "2026-05-29",
+  "2026-06-05",
+  "2026-06-12",
+  "2026-06-19",
+  "2026-06-26",
+  "2026-07-03",
+  "2026-07-10",
+  "2026-07-17",
+  "2026-07-24",
+  "2026-07-31",
+  "2026-08-07",
+  "2026-08-14",
+  "2026-08-21"
+];
+
+const WEEKLY = [
+  {
+    "w": "2026-01-23",
+    "total": 1516,
+    "cv": 93.4,
+    "hp": 71.6,
+    "tc": 99.8,
+    "una": 3.4,
+    "hpc": 96.7,
+    "jrs": 6.3,
+    "jrsA": 6.3,
+    "sk": 6.4
+  },
+  {
+    "w": "2026-01-30",
+    "total": 1501,
+    "cv": 93,
+    "hp": 76.7,
+    "tc": 99.2,
+    "una": 3.2,
+    "hpc": 97,
+    "jrs": 5.8,
+    "jrsA": 5.8,
+    "sk": 5.9
+  },
+  {
+    "w": "2026-02-06",
+    "total": 1499,
+    "cv": 93.7,
+    "hp": 77.5,
+    "tc": 98.9,
+    "una": 3,
+    "hpc": 97.4,
+    "jrs": 6.5,
+    "jrsA": 28.8,
+    "sk": 6.5
+  },
+  {
+    "w": "2026-02-13",
+    "total": 1487,
+    "cv": 95.2,
+    "hp": 79.8,
+    "tc": 98.5,
+    "una": 2.6,
+    "hpc": 97.6,
+    "jrs": 31.1,
+    "jrsA": 33.3,
+    "sk": 31.5
+  },
+  {
+    "w": "2026-02-20",
+    "total": 1487,
+    "cv": 96,
+    "hp": 76.7,
+    "tc": 98.3,
+    "una": 2.6,
+    "hpc": 97.8,
+    "jrs": 34.4,
+    "jrsA": 63.1,
+    "sk": 34.6
+  },
+  {
+    "w": "2026-02-27",
+    "total": 1490,
+    "cv": 98.7,
+    "hp": 79.3,
+    "tc": 98.2,
+    "una": 0.5,
+    "hpc": 99.7,
+    "jrs": 72.3,
+    "jrsA": 82.4,
+    "sk": 72.3
+  },
+  {
+    "w": "2026-03-06",
+    "total": 1480,
+    "cv": 99.3,
+    "hp": 78.3,
+    "tc": 98.2,
+    "una": 0.7,
+    "hpc": 99.5,
+    "jrs": 84.5,
+    "jrsA": 91.1,
+    "sk": 84.6
+  },
+  {
+    "w": "2026-03-13",
+    "total": 1472,
+    "cv": 99.5,
+    "hp": 78.7,
+    "tc": 98.1,
+    "una": 11.5,
+    "hpc": 89.4,
+    "jrs": 87.4,
+    "jrsA": 93.3,
+    "sk": 87.4
+  },
+  {
+    "w": "2026-03-20",
+    "total": 1468,
+    "cv": 99.6,
+    "hp": 82.4,
+    "tc": 98,
+    "una": 10.9,
+    "hpc": 90.3,
+    "jrs": 93.5,
+    "jrsA": 96.7,
+    "sk": 93.5
+  },
+  {
+    "w": "2026-03-27",
+    "total": 1468,
+    "cv": 99.7,
+    "hp": 82.2,
+    "tc": 98,
+    "una": 11.6,
+    "hpc": 91,
+    "jrs": 94.7,
+    "jrsA": 96.5,
+    "sk": 94.8
+  },
+  {
+    "w": "2026-04-03",
+    "total": 1455,
+    "cv": 99.4,
+    "hp": 82.6,
+    "tc": 97.8,
+    "una": 12.6,
+    "hpc": 92.5,
+    "jrs": 95.2,
+    "jrsA": 96.9,
+    "sk": 95.3
+  },
+  {
+    "w": "2026-04-10",
+    "total": 1445,
+    "cv": 99.2,
+    "hp": 82.4,
+    "tc": 97.7,
+    "una": 12.5,
+    "hpc": 89.4,
+    "jrs": 95.4,
+    "jrsA": 97.1,
+    "sk": 95.4
+  },
+  {
+    "w": "2026-04-17",
+    "total": 1444,
+    "cv": 99.2,
+    "hp": 84.6,
+    "tc": 97.6,
+    "una": 17,
+    "hpc": 85,
+    "jrs": 96.1,
+    "jrsA": 98.2,
+    "sk": 96.1
+  },
+  {
+    "w": "2026-04-24",
+    "total": 1447,
+    "cv": 99.2,
+    "hp": 84.5,
+    "tc": 97.4,
+    "una": 17.1,
+    "hpc": 85,
+    "jrs": 96.5,
+    "jrsA": 98.1,
+    "sk": 96.7
+  },
+  {
+    "w": "2026-05-01",
+    "total": 1444,
+    "cv": 99.4,
+    "hp": 85,
+    "tc": 97.3,
+    "una": 2,
+    "hpc": 98.5,
+    "jrs": 96.3,
+    "jrsA": 98.1,
+    "sk": 96.4
+  },
+  {
+    "w": "2026-05-08",
+    "total": 1437,
+    "cv": 99.5,
+    "hp": 83.7,
+    "tc": 97,
+    "una": 1.9,
+    "hpc": 99.1,
+    "jrs": 96.9,
+    "jrsA": 98.3,
+    "sk": 97.1
+  },
+  {
+    "w": "2026-05-15",
+    "total": 1435,
+    "cv": 99.7,
+    "hp": 85.2,
+    "tc": 96.9,
+    "una": 2,
+    "hpc": 98.2,
+    "jrs": 98,
+    "jrsA": 99.1,
+    "sk": 98
+  },
+  {
+    "w": "2026-05-22",
+    "total": 1461,
+    "cv": 99.6,
+    "hp": 86.6,
+    "tc": 96.9,
+    "una": 1.7,
+    "hpc": 98.5,
+    "jrs": 96.6,
+    "jrsA": 97.5,
+    "sk": 98.3
+  },
+  {
+    "w": "2026-05-29",
+    "total": 1464,
+    "cv": 99.7,
+    "hp": 86.8,
+    "tc": 96.7,
+    "una": 1.8,
+    "hpc": 98.6,
+    "jrs": 96.4,
+    "jrsA": 97.3,
+    "sk": 98.5
+  },
+  {
+    "w": "2026-06-05",
+    "total": 1460,
+    "cv": 99.8,
+    "hp": 88.2,
+    "tc": 96.8,
+    "una": 1.6,
+    "hpc": 98.6,
+    "jrs": 96.8,
+    "jrsA": 97.9,
+    "sk": 98.5
+  },
+  {
+    "w": "2026-06-12",
+    "total": 1453,
+    "cv": 99.9,
+    "hp": 89.4,
+    "tc": 97,
+    "una": 1.4,
+    "hpc": 98.8,
+    "jrs": 98.6,
+    "jrsA": 98.7,
+    "sk": 99.5
+  },
+  {
+    "w": "2026-06-19",
+    "total": 1456,
+    "cv": 100,
+    "hp": 90.6,
+    "tc": 96.8,
+    "una": 1.5,
+    "hpc": 98.9,
+    "jrs": 98.4,
+    "jrsA": 98.5,
+    "sk": 99.5
+  },
+  {
+    "w": "2026-06-26",
+    "total": 1458,
+    "cv": 99.9,
+    "hp": 90.5,
+    "tc": 96.9,
+    "una": 1.3,
+    "hpc": 98.8,
+    "jrs": 97.9,
+    "jrsA": 98,
+    "sk": 99.5
+  },
+  {
+    "w": "2026-07-03",
+    "total": 1431,
+    "cv": 99.9,
+    "hp": 91.3,
+    "tc": 100,
+    "una": 1.2,
+    "hpc": 99.4,
+    "jrs": 7,
+    "jrsA": 7,
+    "sk": 7
+  },
+  {
+    "w": "2026-07-10",
+    "total": 1414,
+    "cv": 100,
+    "hp": 92.2,
+    "tc": 100,
+    "una": 1.1,
+    "hpc": 98.9,
+    "jrs": 8.2,
+    "jrsA": 8.9,
+    "sk": 8.3
+  },
+  {
+    "w": "2026-07-17",
+    "total": 1448,
+    "cv": 99.9,
+    "hp": 91.5,
+    "tc": 99.9,
+    "una": 0.9,
+    "hpc": 99.1,
+    "jrs": 75.3,
+    "jrsA": 77.4,
+    "sk": 75.5
+  },
+  {
+    "w": "2026-07-24",
+    "total": 1444,
+    "cv": 100,
+    "hp": 92.2,
+    "tc": 99.9,
+    "una": 0.8,
+    "hpc": 99.3,
+    "jrs": 85.6,
+    "jrsA": 86.6,
+    "sk": 85.7
+  },
+  {
+    "w": "2026-07-31",
+    "total": 1460,
+    "cv": 99.9,
+    "hp": 92.2,
+    "tc": 99.9,
+    "una": 0.8,
+    "hpc": 99.4,
+    "jrs": 91.1,
+    "jrsA": 91.3,
+    "sk": 91.2
+  },
+  {
+    "w": "2026-08-07",
+    "total": 1445,
+    "cv": 99.7,
+    "hp": 91.5,
+    "tc": 99.9,
+    "una": 0.8,
+    "hpc": 99.6,
+    "jrs": 91.7,
+    "jrsA": 91.8,
+    "sk": 91.8
+  },
+  {
+    "w": "2026-08-14",
+    "total": 1428,
+    "cv": 99.6,
+    "hp": 91.9,
+    "tc": 99.9,
+    "una": 1.4,
+    "hpc": 98.7,
+    "jrs": 95,
+    "jrsA": 95.4,
+    "sk": 95.1
+  },
+  {
+    "w": "2026-08-21",
+    "total": 1439,
+    "cv": 99.8,
+    "hp": 90.8,
+    "tc": 99.8,
+    "una": 1.6,
+    "hpc": 98.9,
+    "jrs": 96.2,
+    "jrsA": 96.5,
+    "sk": 96.9
+  }
+];
+
+// Latest week data
+const PROJ_LATEST = [
+  {
+    "name": "Bradesco",
+    "total": 288,
+    "cvNC": 0,
+    "hpNC": 31,
+    "tcNC": 1,
+    "jrsNC": 10,
+    "skNC": 9
+  },
+  {
+    "name": "Vale",
+    "total": 251,
+    "cvNC": 0,
+    "hpNC": 23,
+    "tcNC": 0,
+    "jrsNC": 6,
+    "skNC": 7
+  },
+  {
+    "name": "CEMIG",
+    "total": 186,
+    "cvNC": 0,
+    "hpNC": 10,
+    "tcNC": 0,
+    "jrsNC": 8,
+    "skNC": 8
+  },
+  {
+    "name": "Igua",
+    "total": 110,
+    "cvNC": 2,
+    "hpNC": 7,
+    "tcNC": 0,
+    "jrsNC": 7,
+    "skNC": 5
+  },
+  {
+    "name": "Itau",
+    "total": 100,
+    "cvNC": 0,
+    "hpNC": 18,
+    "tcNC": 0,
+    "jrsNC": 6,
+    "skNC": 1
+  },
+  {
+    "name": "Dow Chemical F&A",
+    "total": 60,
+    "cvNC": 1,
+    "hpNC": 5,
+    "tcNC": 0,
+    "jrsNC": 2,
+    "skNC": 2
+  },
+  {
+    "name": "McDonald's",
+    "total": 59,
+    "cvNC": 0,
+    "hpNC": 8,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Support/Others",
+    "total": 57,
+    "cvNC": 0,
+    "hpNC": 6,
+    "tcNC": 0,
+    "jrsNC": 3,
+    "skNC": 3
+  },
+  {
+    "name": "Santander RE",
+    "total": 57,
+    "cvNC": 0,
+    "hpNC": 5,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 1
+  },
+  {
+    "name": "Telefonica",
+    "total": 35,
+    "cvNC": 0,
+    "hpNC": 7,
+    "tcNC": 1,
+    "jrsNC": 3,
+    "skNC": 4
+  },
+  {
+    "name": "Staff - Student",
+    "total": 34,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Automation",
+    "total": 33,
+    "cvNC": 0,
+    "hpNC": 3,
+    "tcNC": 0,
+    "jrsNC": 1,
+    "skNC": 1
+  },
+  {
+    "name": "Verzani F&A",
+    "total": 33,
+    "cvNC": 0,
+    "hpNC": 2,
+    "tcNC": 0,
+    "jrsNC": 1,
+    "skNC": 1
+  },
+  {
+    "name": "Naturgy CT",
+    "total": 32,
+    "cvNC": 0,
+    "hpNC": 1,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Bombril",
+    "total": 28,
+    "cvNC": 0,
+    "hpNC": 4,
+    "tcNC": 1,
+    "jrsNC": 3,
+    "skNC": 3
+  },
+  {
+    "name": "Burger King HR",
+    "total": 25,
+    "cvNC": 0,
+    "hpNC": 1,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "TAO",
+    "total": 16,
+    "cvNC": 0,
+    "hpNC": 1,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "DASA",
+    "total": 13,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Iron Mountain",
+    "total": 12,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Naturgy HR",
+    "total": 5,
+    "cvNC": 0,
+    "hpNC": 1,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Naturgy F&A",
+    "total": 3,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "Vale FICO",
+    "total": 2,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  }
+];
+
+const MGR_LATEST = [
+  {
+    "name": "APARECIDA DA SILVA, MA",
+    "total": 311,
+    "cvNC": 0,
+    "hpNC": 23,
+    "tcNC": 2,
+    "jrsNC": 8,
+    "skNC": 9
+  },
+  {
+    "name": "CUSTODIO DA SILVEIRA NETO, NC",
+    "total": 141,
+    "cvNC": 0,
+    "hpNC": 15,
+    "tcNC": 0,
+    "jrsNC": 6,
+    "skNC": 4
+  },
+  {
+    "name": "FAVERO, M",
+    "total": 109,
+    "cvNC": 0,
+    "hpNC": 15,
+    "tcNC": 0,
+    "jrsNC": 4,
+    "skNC": 4
+  },
+  {
+    "name": "MONTEIRO, AJ",
+    "total": 94,
+    "cvNC": 0,
+    "hpNC": 6,
+    "tcNC": 0,
+    "jrsNC": 2,
+    "skNC": 2
+  },
+  {
+    "name": "MACHADO DOMENEGHETTI, PM",
+    "total": 92,
+    "cvNC": 0,
+    "hpNC": 11,
+    "tcNC": 0,
+    "jrsNC": 3,
+    "skNC": 3
+  },
+  {
+    "name": "MARTINS LINHARES, KM",
+    "total": 92,
+    "cvNC": 0,
+    "hpNC": 4,
+    "tcNC": 0,
+    "jrsNC": 2,
+    "skNC": 2
+  },
+  {
+    "name": "VIEIRA LAGO, AV",
+    "total": 88,
+    "cvNC": 0,
+    "hpNC": 17,
+    "tcNC": 0,
+    "jrsNC": 6,
+    "skNC": 1
+  },
+  {
+    "name": "MEIRA DE BRITO, GM",
+    "total": 86,
+    "cvNC": 0,
+    "hpNC": 5,
+    "tcNC": 0,
+    "jrsNC": 6,
+    "skNC": 6
+  },
+  {
+    "name": "PIMENTEL BARBOSA, VP",
+    "total": 76,
+    "cvNC": 0,
+    "hpNC": 8,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "BENEVIDES FERNANDES, TB",
+    "total": 74,
+    "cvNC": 1,
+    "hpNC": 5,
+    "tcNC": 0,
+    "jrsNC": 5,
+    "skNC": 3
+  },
+  {
+    "name": "MONTARROYOS, E",
+    "total": 43,
+    "cvNC": 0,
+    "hpNC": 1,
+    "tcNC": 0,
+    "jrsNC": 2,
+    "skNC": 2
+  },
+  {
+    "name": "CAETANO BUENO, JC",
+    "total": 38,
+    "cvNC": 0,
+    "hpNC": 2,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 1
+  },
+  {
+    "name": "PEREIRA DOS SANTOS, MC",
+    "total": 38,
+    "cvNC": 1,
+    "hpNC": 5,
+    "tcNC": 0,
+    "jrsNC": 1,
+    "skNC": 1
+  },
+  {
+    "name": "MENDES, T",
+    "total": 33,
+    "cvNC": 0,
+    "hpNC": 7,
+    "tcNC": 1,
+    "jrsNC": 3,
+    "skNC": 4
+  },
+  {
+    "name": "VERISSIMO, J",
+    "total": 33,
+    "cvNC": 0,
+    "hpNC": 3,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 1
+  },
+  {
+    "name": "FALBO CARDOSO, TF",
+    "total": 20,
+    "cvNC": 0,
+    "hpNC": 2,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "AZEREDO, G",
+    "total": 18,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "QUARESMA TOBIAS, TQ",
+    "total": 16,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "DE MORAES BALISTEIRO, DM",
+    "total": 16,
+    "cvNC": 0,
+    "hpNC": 2,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "LOPES DE OLIVEIRA, CA",
+    "total": 11,
+    "cvNC": 1,
+    "hpNC": 2,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "WEILER, R",
+    "total": 5,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "No Value Available",
+    "total": 2,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 0,
+    "skNC": 0
+  },
+  {
+    "name": "PADILLA TROTZ, LP",
+    "total": 2,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 1,
+    "skNC": 1
+  },
+  {
+    "name": "ARRUDA FERREIRA SANTOS, CE",
+    "total": 1,
+    "cvNC": 0,
+    "hpNC": 0,
+    "tcNC": 0,
+    "jrsNC": 1,
+    "skNC": 1
+  }
+];
+
+const TOWER_LATEST = [
+  {
+    "name": "Meire",
+    "total": 876,
+    "cvNC": 1,
+    "jrsNC": 29,
+    "skNC": 25,
+    "tcNC": 3
+  },
+  {
+    "name": "Karina",
+    "total": 233,
+    "cvNC": 0,
+    "jrsNC": 10,
+    "skNC": 10,
+    "tcNC": 0
+  },
+  {
+    "name": "Montarroyos",
+    "total": 208,
+    "cvNC": 0,
+    "jrsNC": 6,
+    "skNC": 7,
+    "tcNC": 0
+  },
+  {
+    "name": "Thaissa",
+    "total": 66,
+    "cvNC": 2,
+    "jrsNC": 4,
+    "skNC": 2,
+    "tcNC": 0
+  },
+  {
+    "name": "Thiago",
+    "total": 41,
+    "cvNC": 0,
+    "jrsNC": 1,
+    "skNC": 1,
+    "tcNC": 0
+  },
+  {
+    "name": "Roberta",
+    "total": 15,
+    "cvNC": 0,
+    "jrsNC": 0,
+    "skNC": 0,
+    "tcNC": 0
+  }
+];
+
+const DELTA_DIST = {
+  "< -20": 37,
+  "-20 to -10": 55,
+  "-10 to 0": 401,
+  "0 to 10": 826,
+  "10 to 20": 71,
+  "> 20": 49
+};
+
+// ════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════════════
+const charts = {};
+function ch(id) {
+  if (!charts[id]) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    charts[id] = echarts.init(el, null, {renderer:'canvas'});
+  }
+  return charts[id];
+}
+
+function fmtWeek(w) { return w.slice(5).replace('-','/') + '/' + w.slice(0,4); }
+
+function colorRate(r) {
+  if (r >= 95) return '#24a148';
+  if (r >= 85) return '#f1c21b';
+  return '#da1e28';
+}
+function badgeRate(r) {
+  if (r >= 95) return 'green';
+  if (r >= 85) return 'yellow';
+  return 'red';
+}
+
+// Filter weekly data between two weeks (inclusive)
+function filteredWeekly(from, to) {
+  return WEEKLY.filter(d => d.w >= from && d.w <= to);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// POPULATE SELECTS
+// ════════════════════════════════════════════════════════════════════
+function populateSelects() {
+  const weekSels = ['exec-from','exec-to','trend-from','trend-to'];
+  weekSels.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    WEEKS.forEach(w => {
+      const o = document.createElement('option');
+      o.value = w; o.text = fmtWeek(w);
+      el.appendChild(o);
+    });
+  });
+  document.getElementById('exec-from').value = WEEKS[0];
+  document.getElementById('exec-to').value   = WEEKS[WEEKS.length-1];
+  document.getElementById('trend-from').value = WEEKS[0];
+  document.getElementById('trend-to').value   = WEEKS[WEEKS.length-1];
+
+  // Tower select
+  const towerEl = document.getElementById('exec-tower');
+  [...new Set(TOWER_LATEST.map(t=>t.name))].forEach(t => {
+    const o = document.createElement('option'); o.value=t; o.text=t; towerEl.appendChild(o);
+  });
+
+  // Project select
+  const projEl = document.getElementById('exec-project');
+  PROJ_LATEST.map(p=>p.name).forEach(p => {
+    const o = document.createElement('option'); o.value=p; o.text=p; projEl.appendChild(o);
+  });
+
+  // Week selects for project/manager pages
+  ['proj-week','mgr-week'].forEach(id => {
+    const el = document.getElementById(id);
+    WEEKS.slice().reverse().forEach(w => {
+      const o = document.createElement('option'); o.value=w; o.text=fmtWeek(w);
+      el.appendChild(o);
+    });
+    el.value = WEEKS[WEEKS.length-1];
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// EXECUTIVE PAGE
+// ════════════════════════════════════════════════════════════════════
+function execUpdate() {
+  const from = document.getElementById('exec-from').value;
+  const to   = document.getElementById('exec-to').value;
+  const fd   = filteredWeekly(from, to);
+  if (!fd.length) return;
+
+  const latest = fd[fd.length-1];
+  const first  = fd[0];
+
+  // KPIs
+  const kpis = [
+    {lbl:'CV Compliance',val:latest.cv+'%',sub:`${fd.length} weeks avg: ${(fd.reduce((s,d)=>s+d.cv,0)/fd.length).toFixed(1)}%`,cls:badgeRate(latest.cv)},
+    {lbl:'Hours Plan Compliance',val:latest.hp+'%',sub:`First: ${first.hp}%  Latest: ${latest.hp}%`,cls:badgeRate(latest.hp)},
+    {lbl:'Timely Claim',val:latest.tc+'%',sub:'Hours clocked on time',cls:badgeRate(latest.tc)},
+    {lbl:'Hrs Plan Completeness',val:latest.hpc+'%',sub:'Forecast submitted on time',cls:badgeRate(latest.hpc)},
+    {lbl:'JRS & Skills',val:latest.jrs+'%',sub:'Combined assessment rate',cls:badgeRate(latest.jrs)},
+    {lbl:'No Future Assignment',val:((100-latest.una).toFixed(1))+'%',sub:'% of pop flagged',cls:(100-latest.una)>10?'red':(100-latest.una)>5?'yellow':'green'},
+    {lbl:'Active Practitioners',val:latest.total.toLocaleString(),sub:`Range: ${Math.min(...fd.map(d=>d.total))}–${Math.max(...fd.map(d=>d.total))}`,cls:'blue'},
+    {lbl:'Weeks Analyzed',val:fd.length,sub:`${fmtWeek(from)} → ${fmtWeek(to)}`,cls:'purple'}
+  ];
+
+  const kpiGrid = document.getElementById('exec-kpis');
+  kpiGrid.innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="val">${k.val}</div>
+      <div class="lbl">${k.lbl}</div>
+      <div class="sub">${k.sub}</div>
+    </div>`).join('');
+
+  document.getElementById('exec-week-lbl').textContent = fmtWeek(to);
+
+  // Radar chart
+  const radar = ch('ch-radar');
+  if (radar) radar.setOption({
+    tooltip:{trigger:'item'},
+    radar:{indicator:[
+      {name:'CV',max:100},{name:'Hrs Plan',max:100},{name:'Timely Claim',max:100},
+      {name:'Completeness',max:100},{name:'JRS&Skills',max:100}
+    ],radius:'68%',axisName:{fontSize:11}},
+    series:[{type:'radar',data:[{
+      value:[latest.cv,latest.hp,latest.tc,latest.hpc,latest.jrs],
+      name:'Latest Week',
+      areaStyle:{opacity:0.25},
+      itemStyle:{color:'#4589ff'}
+    },{
+      value:[first.cv,first.hp,first.tc,first.hpc,first.jrs],
+      name:'First Week',
+      areaStyle:{opacity:0.10},
+      lineStyle:{type:'dashed'},
+      itemStyle:{color:'#f1c21b'}
+    }]},
+    legend:{data:['Latest Week','First Week'],bottom:0,textStyle:{fontSize:11}}]
+  });
+
+  // Executive trend line
+  const execTrend = ch('ch-exec-trend');
+  if (execTrend) execTrend.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['CV','Hrs Plan','JRS&Skills'],bottom:0,textStyle:{fontSize:11}},
+    xAxis:{type:'category',data:fd.map(d=>fmtWeek(d.w)),axisLabel:{rotate:30,fontSize:10}},
+    yAxis:{type:'value',min:0,max:105,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    series:[
+      {name:'CV',type:'line',data:fd.map(d=>d.cv),smooth:true,lineStyle:{color:'#24a148',width:2},symbol:'none'},
+      {name:'Hrs Plan',type:'line',data:fd.map(d=>d.hp),smooth:true,lineStyle:{color:'#f1c21b',width:2},symbol:'none'},
+      {name:'JRS&Skills',type:'line',data:fd.map(d=>d.jrs),smooth:true,lineStyle:{color:'#8a3ffc',width:2},symbol:'none'}
+    ]
+  });
+
+  // Gauges
+  function makeGauge(id, val, label) {
+    const c = ch(id); if (!c) return;
+    const col = colorRate(val);
+    c.setOption({series:[{type:'gauge',startAngle:200,endAngle:-20,min:0,max:100,
+      splitNumber:5,radius:'85%',
+      axisLine:{lineStyle:{width:12,color:[[val/100,col],[1,'#edf0f4']]}},
+      pointer:{show:false},axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},
+      detail:{formatter:v=>v.toFixed(1)+'%',fontSize:20,fontWeight:700,color:col,offsetCenter:[0,'10%']},
+      title:{offsetCenter:[0,'40%'],fontSize:11,color:'#57606a'},
+      data:[{value:val,name:label}]
+    }]);
+  }
+  makeGauge('ch-cv-gauge',   latest.cv,   'CV Updated');
+  makeGauge('ch-hp-gauge',   latest.hp,   'Within ±20/10');
+  makeGauge('ch-tc-gauge',   latest.tc,   'On Time');
+  makeGauge('ch-hpc-gauge',  latest.hpc,  'Forecast Submitted');
+  makeGauge('ch-jrs-gauge',  latest.jrs,  'Assessed');
+  makeGauge('ch-una-gauge',  latest.una,  '% With Assignment');
+
+  // Tower table
+  const tbody = document.getElementById('tower-tbody');
+  tbody.innerHTML = TOWER_LATEST.map(t=>`
+    <tr>
+      <td><b>${t.name}</b></td>
+      <td>${t.total}</td>
+      <td>${t.cvNC > 0 ? `<span class="bc red">${t.cvNC}</span>` : '<span class="bc green">0</span>'}</td>
+      <td>—</td>
+      <td>${t.tcNC > 0 ? `<span class="bc yellow">${t.tcNC}</span>` : '<span class="bc green">0</span>'}</td>
+      <td>${t.jrsNC > 0 ? `<span class="bc ${t.jrsNC>10?'red':'yellow'}">${t.jrsNC}</span>` : '<span class="bc green">0</span>'}</td>
+      <td>${t.skNC > 0 ? `<span class="bc ${t.skNC>10?'red':'yellow'}">${t.skNC}</span>` : '<span class="bc green">0</span>'}</td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TRENDS PAGE
+// ════════════════════════════════════════════════════════════════════
+function trendUpdate() {
+  const from = document.getElementById('trend-from').value;
+  const to   = document.getElementById('trend-to').value;
+  const fd   = filteredWeekly(from, to);
+  if (!fd.length) return;
+
+  const labels = fd.map(d=>fmtWeek(d.w));
+
+  // All metrics multi-line
+  const allTrends = ch('ch-all-trends');
+  if (allTrends) allTrends.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['CV','Hrs Plan','Timely Claim','Completeness','JRS+Skills'],bottom:0,textStyle:{fontSize:11}},
+    xAxis:{type:'category',data:labels,axisLabel:{rotate:35,fontSize:10}},
+    yAxis:{type:'value',min:0,max:105,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    grid:{bottom:70},
+    series:[
+      {name:'CV',           type:'line',data:fd.map(d=>d.cv), smooth:true,lineStyle:{color:'#24a148',width:2},symbol:'none'},
+      {name:'Hrs Plan',     type:'line',data:fd.map(d=>d.hp), smooth:true,lineStyle:{color:'#f1c21b',width:2},symbol:'none'},
+      {name:'Timely Claim', type:'line',data:fd.map(d=>d.tc), smooth:true,lineStyle:{color:'#4589ff',width:2},symbol:'none'},
+      {name:'Completeness', type:'line',data:fd.map(d=>d.hpc),smooth:true,lineStyle:{color:'#08bdba',width:2},symbol:'none'},
+      {name:'JRS+Skills',   type:'line',data:fd.map(d=>d.jrs),smooth:true,lineStyle:{color:'#8a3ffc',width:2},symbol:'none'}
+    ]
+  });
+
+  // CV trend
+  const cvTrend = ch('ch-cv-trend');
+  if (cvTrend) cvTrend.setOption({
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'category',data:labels,axisLabel:{rotate:30,fontSize:10}},
+    yAxis:{type:'value',min:88,max:101,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    series:[{type:'line',data:fd.map(d=>d.cv),smooth:true,
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(36,161,72,.35)'},{offset:1,color:'rgba(36,161,72,.02)'}]}},
+      lineStyle:{color:'#24a148',width:2.5},symbol:'none',itemStyle:{color:'#24a148'}}]
+  });
+
+  // HP trend
+  const hpTrend = ch('ch-hp-trend');
+  if (hpTrend) hpTrend.setOption({
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'category',data:labels,axisLabel:{rotate:30,fontSize:10}},
+    yAxis:{type:'value',min:65,max:100,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    series:[{type:'line',data:fd.map(d=>d.hp),smooth:true,
+      markLine:{data:[{yAxis:90,lineStyle:{color:'#24a148',type:'dashed'},label:{formatter:'Target 90%'}}]},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(241,194,27,.35)'},{offset:1,color:'rgba(241,194,27,.02)'}]}},
+      lineStyle:{color:'#f1c21b',width:2.5},symbol:'circle',symbolSize:4,itemStyle:{color:'#f1c21b'}}]
+  });
+
+  // JRS trend
+  const jrsTrend = ch('ch-jrs-trend');
+  if (jrsTrend) jrsTrend.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['JRS Assessed','Skills Proficiency'],bottom:0,textStyle:{fontSize:11}},
+    xAxis:{type:'category',data:labels,axisLabel:{rotate:30,fontSize:10}},
+    yAxis:{type:'value',min:0,max:105,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    series:[
+      {name:'JRS Assessed',      type:'line',data:fd.map(d=>d.jrsA),smooth:true,lineStyle:{color:'#4589ff',width:2},symbol:'none'},
+      {name:'Skills Proficiency',type:'line',data:fd.map(d=>d.sk),  smooth:true,lineStyle:{color:'#8a3ffc',width:2},symbol:'none'}
+    ]
+  });
+
+  // Headcount trend
+  const hcTrend = ch('ch-hc-trend');
+  if (hcTrend) hcTrend.setOption({
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'category',data:labels,axisLabel:{rotate:30,fontSize:10}},
+    yAxis:{type:'value',min:1380,max:1560,axisLabel:{fontSize:10}},
+    series:[{type:'bar',data:fd.map(d=>d.total),barMaxWidth:24,
+      itemStyle:{color:'#4589ff'},
+      label:{show:false}}]
+  });
+
+  // WoW delta bar (HP)
+  const wowData = fd.slice(1).map((d,i)=>({w:fmtWeek(d.w),delta:+(d.hp-fd[i].hp).toFixed(1)}));
+  const wowHP = ch('ch-wow-hp');
+  if (wowHP) wowHP.setOption({
+    tooltip:{trigger:'axis',formatter:p=>`${p[0].name}: ${p[0].value>0?'+':''}${p[0].value} pp`},
+    xAxis:{type:'category',data:wowData.map(d=>d.w),axisLabel:{rotate:35,fontSize:10}},
+    yAxis:{type:'value',axisLabel:{formatter:v=>v+' pp',fontSize:10}},
+    series:[{type:'bar',data:wowData.map(d=>d.delta),barMaxWidth:20,
+      itemStyle:{color:params=>params.data>=0?'#24a148':'#da1e28'}}]
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PROJECTS PAGE
+// ════════════════════════════════════════════════════════════════════
+function projUpdate() {
+  // For now always show latest week data (full historical by project not pre-computed)
+  const projs = PROJ_LATEST;
+  const top15  = projs.slice(0,15);
+
+  const hpChart = ch('ch-proj-hp');
+  if (hpChart) hpChart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:120,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:top15.slice().reverse().map(p=>p.name),axisLabel:{fontSize:10}},
+    series:[{type:'bar',data:top15.slice().reverse().map(p=>p.hpNC),barMaxWidth:18,
+      itemStyle:{color:p=>p.value>15?'#da1e28':p.value>7?'#f1c21b':'#4589ff'},
+      label:{show:true,position:'right',fontSize:10}}]
+  });
+
+  const jrsChart = ch('ch-proj-jrs');
+  if (jrsChart) jrsChart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['JRS Non-Comp','Skills Non-Comp'],bottom:0,textStyle:{fontSize:11}},
+    grid:{left:120,right:20,top:10,bottom:50},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:top15.slice().reverse().map(p=>p.name),axisLabel:{fontSize:10}},
+    series:[
+      {name:'JRS Non-Comp',   type:'bar',data:top15.slice().reverse().map(p=>p.jrsNC),barMaxWidth:10,itemStyle:{color:'#8a3ffc'}},
+      {name:'Skills Non-Comp',type:'bar',data:top15.slice().reverse().map(p=>p.skNC), barMaxWidth:10,itemStyle:{color:'#4589ff'}}
+    ]
+  });
+
+  // Matrix table
+  const tbody = document.getElementById('proj-tbody');
+  tbody.innerHTML = projs.map(p=>{
+    const hpPct = p.total>0?((p.hpNC/p.total)*100).toFixed(0):0;
+    const jrsPct= p.total>0?((p.jrsNC/p.total)*100).toFixed(0):0;
+    const skPct = p.total>0?((p.skNC/p.total)*100).toFixed(0):0;
+    const tcPct = p.total>0?((p.tcNC/p.total)*100).toFixed(0):0;
+    const cvPct = p.total>0?((p.cvNC/p.total)*100).toFixed(0):0;
+    return `<tr>
+      <td><b>${p.name}</b></td>
+      <td>${p.total}</td>
+      <td>${p.cvNC>0?`<span class="bc red">${p.cvNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${cvPct>0?`<span class="bc red">${cvPct}%</span>`:'<span class="bc green">0%</span>'}</td>
+      <td>${p.hpNC>0?`<span class="bc ${p.hpNC>15?'red':'yellow'}">${p.hpNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${hpPct>15?`<span class="bc red">${hpPct}%</span>`:hpPct>5?`<span class="bc yellow">${hpPct}%</span>`:`<span class="bc green">${hpPct}%</span>`}</td>
+      <td>${p.tcNC>0?`<span class="bc yellow">${p.tcNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${tcPct>0?`<span class="bc yellow">${tcPct}%</span>`:'<span class="bc green">0%</span>'}</td>
+      <td>${p.jrsNC>0?`<span class="bc ${p.jrsNC>5?'red':'yellow'}">${p.jrsNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${jrsPct>5?`<span class="bc red">${jrsPct}%</span>`:jrsPct>0?`<span class="bc yellow">${jrsPct}%</span>`:`<span class="bc green">0%</span>`}</td>
+      <td>${p.skNC>0?`<span class="bc ${p.skNC>5?'red':'yellow'}">${p.skNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${skPct>5?`<span class="bc red">${skPct}%</span>`:skPct>0?`<span class="bc yellow">${skPct}%</span>`:`<span class="bc green">0%</span>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MANAGERS PAGE
+// ════════════════════════════════════════════════════════════════════
+function mgrUpdate() {
+  const mgrs = MGR_LATEST.filter(m=>m.total>5);
+  const top15 = mgrs.slice(0,15);
+
+  const hpChart = ch('ch-mgr-hp');
+  if (hpChart) hpChart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:200,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:top15.slice().reverse().map(m=>m.name.split(',')[0]),axisLabel:{fontSize:10}},
+    series:[{type:'bar',data:top15.slice().reverse().map(m=>m.hpNC),barMaxWidth:18,
+      itemStyle:{color:p=>p.value>15?'#da1e28':p.value>7?'#f1c21b':'#4589ff'},
+      label:{show:true,position:'right',fontSize:10}}]
+  });
+
+  const jrsChart = ch('ch-mgr-jrs');
+  if (jrsChart) jrsChart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['JRS Non-Comp','Skills Non-Comp'],bottom:0,textStyle:{fontSize:11}},
+    grid:{left:200,right:20,top:10,bottom:50},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:top15.slice().reverse().map(m=>m.name.split(',')[0]),axisLabel:{fontSize:10}},
+    series:[
+      {name:'JRS Non-Comp',   type:'bar',data:top15.slice().reverse().map(m=>m.jrsNC),barMaxWidth:10,itemStyle:{color:'#8a3ffc'}},
+      {name:'Skills Non-Comp',type:'bar',data:top15.slice().reverse().map(m=>m.skNC), barMaxWidth:10,itemStyle:{color:'#4589ff'}}
+    ]
+  });
+
+  const tbody = document.getElementById('mgr-tbody');
+  tbody.innerHTML = mgrs.map(m=>{
+    const hpPct = m.total>0?((m.hpNC/m.total)*100).toFixed(0):0;
+    const jrsPct= m.total>0?((m.jrsNC/m.total)*100).toFixed(0):0;
+    const skPct = m.total>0?((m.skNC/m.total)*100).toFixed(0):0;
+    return `<tr>
+      <td><b>${m.name}</b></td><td>${m.total}</td>
+      <td>${m.cvNC>0?`<span class="bc red">${m.cvNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${m.hpNC>0?`<span class="bc ${m.hpNC>15?'red':'yellow'}">${m.hpNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${hpPct>15?`<span class="bc red">${hpPct}%</span>`:hpPct>5?`<span class="bc yellow">${hpPct}%</span>`:`<span class="bc green">${hpPct}%</span>`}</td>
+      <td>${m.tcNC>0?`<span class="bc yellow">${m.tcNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${m.jrsNC>0?`<span class="bc ${m.jrsNC>5?'red':'yellow'}">${m.jrsNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${jrsPct>5?`<span class="bc red">${jrsPct}%</span>`:jrsPct>0?`<span class="bc yellow">${jrsPct}%</span>`:`<span class="bc green">0%</span>`}</td>
+      <td>${m.skNC>0?`<span class="bc ${m.skNC>5?'red':'yellow'}">${m.skNC}</span>`:'<span class="bc green">0</span>'}</td>
+      <td>${skPct>5?`<span class="bc red">${skPct}%</span>`:skPct>0?`<span class="bc yellow">${skPct}%</span>`:`<span class="bc green">0%</span>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// HOURS PAGE
+// ════════════════════════════════════════════════════════════════════
+function renderHours() {
+  // Delta distribution bar
+  const deltaChart = ch('ch-delta-dist');
+  if (deltaChart) {
+    const keys = Object.keys(DELTA_DIST);
+    const vals = keys.map(k=>DELTA_DIST[k]);
+    deltaChart.setOption({
+      tooltip:{trigger:'axis'},
+      xAxis:{type:'category',data:keys,axisLabel:{fontSize:11}},
+      yAxis:{type:'value',axisLabel:{fontSize:10}},
+      series:[{type:'bar',data:vals,barMaxWidth:40,
+        itemStyle:{color:p=>['< -20','-20 to -10'].includes(keys[p.dataIndex])?'#da1e28':
+          keys[p.dataIndex]==='-10 to 0'?'#f1c21b':
+          ['10 to 20','> 20'].includes(keys[p.dataIndex])?'#0f62fe':'#24a148'},
+        label:{show:true,position:'top',fontSize:11}}]
+    });
+  }
+
+  // HP area chart
+  const hpArea = ch('ch-hp-area');
+  if (hpArea) hpArea.setOption({
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'category',data:WEEKLY.map(d=>fmtWeek(d.w)),axisLabel:{rotate:35,fontSize:10}},
+    yAxis:{type:'value',min:65,max:100,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    grid:{bottom:70},
+    series:[{type:'line',data:WEEKLY.map(d=>d.hp),smooth:true,
+      markLine:{data:[{yAxis:90,lineStyle:{color:'#24a148',type:'dashed'},label:{formatter:'90% target',fontSize:10}}]},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(241,194,27,.4)'},{offset:1,color:'rgba(241,194,27,.02)'}]}},
+      lineStyle:{color:'#f1c21b',width:2},symbol:'none'}]
+  });
+
+  // Scatter: HP Completeness vs HP Compliance
+  const scatter = ch('ch-hp-scatter');
+  if (scatter) scatter.setOption({
+    tooltip:{formatter:p=>`Week: ${p.name}<br>Completeness: ${p.value[0]}%<br>Compliance: ${p.value[1]}%`},
+    xAxis:{name:'Completeness %',nameLocation:'middle',nameGap:25,min:80,max:101,axisLabel:{fontSize:10}},
+    yAxis:{name:'Compliance %',nameLocation:'middle',nameGap:35,min:65,max:100,axisLabel:{fontSize:10}},
+    series:[{type:'scatter',data:WEEKLY.map(d=>({value:[d.hpc,d.hp],name:fmtWeek(d.w)})),
+      itemStyle:{color:'#4589ff',opacity:0.7},symbolSize:8}]
+  });
+
+  // No Assignment trend
+  const unaTrend = ch('ch-una-trend');
+  if (unaTrend) unaTrend.setOption({
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'category',data:WEEKLY.map(d=>fmtWeek(d.w)),axisLabel:{rotate:35,fontSize:10}},
+    yAxis:{type:'value',min:75,max:101,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    grid:{bottom:70},
+    series:[{type:'line',data:WEEKLY.map(d=>d.una),smooth:true,
+      markArea:{data:[[{yAxis:80,itemStyle:{color:'rgba(218,30,40,.07)'}},{yAxis:0}]],label:{show:false}},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(69,137,255,.35)'},{offset:1,color:'rgba(69,137,255,.02)'}]}},
+      lineStyle:{color:'#4589ff',width:2},symbol:'none'}]
+  });
+
+  // Heatmap
+  const heatmap = ch('ch-hours-heatmap');
+  if (heatmap) {
+    const metrics = ['Hrs Plan','Timely Claim','HP Completeness','No Assignment'];
+    const getters = [d=>d.hp, d=>d.tc, d=>d.hpc, d=>d.una];
+    const hData = [];
+    WEEKLY.forEach((d,wi)=>{
+      metrics.forEach((m,mi)=>{
+        hData.push([wi, mi, getters[mi](d)]);
+      });
+    });
+    heatmap.setOption({
+      tooltip:{formatter:p=>`${WEEKLY[p.value[0]].w}<br>${metrics[p.value[1]]}: ${p.value[2].toFixed(1)}%`},
+      grid:{left:120,right:20,top:10,bottom:60},
+      xAxis:{type:'category',data:WEEKLY.map(d=>fmtWeek(d.w)),axisLabel:{rotate:40,fontSize:9}},
+      yAxis:{type:'category',data:metrics,axisLabel:{fontSize:11}},
+      visualMap:{min:70,max:100,calculable:true,orient:'horizontal',left:'center',bottom:0,
+        inRange:{color:['#da1e28','#f1c21b','#24a148']},text:['100%','70%'],textStyle:{fontSize:10}},
+      series:[{type:'heatmap',data:hData,label:{show:false}}]
+    });
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// JRS PAGE
+// ════════════════════════════════════════════════════════════════════
+function renderJRS() {
+  const jrsFull = ch('ch-jrs-full');
+  if (jrsFull) jrsFull.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['JRS & Skills Combined','JRS Assessed','Skills Proficiency'],bottom:0,textStyle:{fontSize:11}},
+    xAxis:{type:'category',data:WEEKLY.map(d=>fmtWeek(d.w)),axisLabel:{rotate:35,fontSize:10}},
+    yAxis:{type:'value',min:0,max:105,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+    grid:{bottom:70},
+    series:[
+      {name:'JRS & Skills Combined',type:'line',data:WEEKLY.map(d=>d.jrs), smooth:true,lineStyle:{color:'#8a3ffc',width:3},symbol:'none'},
+      {name:'JRS Assessed',         type:'line',data:WEEKLY.map(d=>d.jrsA),smooth:true,lineStyle:{color:'#4589ff',width:2,type:'dashed'},symbol:'none'},
+      {name:'Skills Proficiency',   type:'line',data:WEEKLY.map(d=>d.sk),  smooth:true,lineStyle:{color:'#08bdba',width:2,type:'dashed'},symbol:'none'}
+    ]
+  });
+
+  const jrsSplit = ch('ch-jrs-split');
+  if (jrsSplit) {
+    const latestJrs = WEEKLY[WEEKLY.length-1];
+    jrsSplit.setOption({
+      tooltip:{trigger:'item'},
+      legend:{bottom:0,textStyle:{fontSize:11}},
+      series:[{type:'pie',radius:['45%','70%'],
+        data:[
+          {value:latestJrs.jrsA,name:'JRS Assessed',itemStyle:{color:'#4589ff'}},
+          {value:100-latestJrs.jrsA,name:'JRS Non-Comp',itemStyle:{color:'#edf5ff'}},
+          {value:latestJrs.sk,name:'Skills Compliant',itemStyle:{color:'#08bdba'}},
+          {value:100-latestJrs.sk,name:'Skills Non-Comp',itemStyle:{color:'#defaf5'}}
+        ],
+        label:{formatter:'{b}: {d}%',fontSize:11}
+      }]
+    });
+  }
+
+  const jrsTower = ch('ch-jrs-tower');
+  if (jrsTower) jrsTower.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:80,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:TOWER_LATEST.map(t=>t.name),axisLabel:{fontSize:11}},
+    series:[{type:'bar',data:TOWER_LATEST.map(t=>t.jrsNC),barMaxWidth:24,
+      itemStyle:{color:p=>p.value>10?'#da1e28':p.value>4?'#f1c21b':'#24a148'},
+      label:{show:true,position:'right',fontSize:11}}]
+  });
+
+  const skTower = ch('ch-skills-tower');
+  if (skTower) skTower.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:80,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:TOWER_LATEST.map(t=>t.name),axisLabel:{fontSize:11}},
+    series:[{type:'bar',data:TOWER_LATEST.map(t=>t.skNC),barMaxWidth:24,
+      itemStyle:{color:p=>p.value>10?'#da1e28':p.value>4?'#f1c21b':'#24a148'},
+      label:{show:true,position:'right',fontSize:11}}]
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// NAV + INIT
+// ════════════════════════════════════════════════════════════════════
+const pagesRendered = {};
+function nav(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  if (!pagesRendered[id]) {
+    pagesRendered[id] = true;
+    if (id==='trends')  { trendUpdate(); }
+    if (id==='projects'){ projUpdate(); }
+    if (id==='managers'){ mgrUpdate(); }
+    if (id==='hours')   { renderHours(); }
+    if (id==='jrs')     { renderJRS(); }
+  }
+  setTimeout(()=>Object.values(charts).forEach(c=>{ try{c.resize()}catch(e){} }), 50);
+}
+
+window.addEventListener('load', () => {
+  populateSelects();
+  execUpdate();
+  pagesRendered['executive'] = true;
+});
+
+window.addEventListener('resize', () => {
+  Object.values(charts).forEach(c=>{ try{c.resize()}catch(e){} });
+});
+</script>
+
+<footer>Brazil PA Metrics Compliance Dashboard &nbsp;|&nbsp; Data: Jan–Aug 2026 &nbsp;|&nbsp; 45,236 records &nbsp;|&nbsp; 31 weeks &nbsp;|&nbsp; Made with IBM Bob</footer>
+</body>
+</html>
