@@ -73,13 +73,13 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <span class="hbadge">Jan 2026 – Aug 2026 | 31 weeks | ~1459 practitioners</span>
 </header>
 <nav>
-  <button class="active" onclick="nav('executive')">&#128202; Executive Summary</button>
-  <button onclick="nav('trends')">&#128200; Trends &amp; Patterns</button>
-  <button onclick="nav('projects')">&#127959; By Project</button>
-  <button onclick="nav('managers')">&#128101; By Manager</button>
-  <button onclick="nav('hours')">&#8987; Hours Analysis</button>
-  <button onclick="nav('jrs')">&#127891; JRS &amp; Skills</button>
-  <button onclick="nav('insights')">&#128161; Key Insights</button>
+  <button class="active" onclick="nav('executive',this)">&#128202; Executive Summary</button>
+  <button onclick="nav('trends',this)">&#128200; Trends &amp; Patterns</button>
+  <button onclick="nav('projects',this)">&#127959; By Project</button>
+  <button onclick="nav('managers',this)">&#128101; By Manager</button>
+  <button onclick="nav('hours',this)">&#8987; Hours Analysis</button>
+  <button onclick="nav('jrs',this)">&#127891; JRS &amp; Skills</button>
+  <button onclick="nav('insights',this)">&#128161; Key Insights</button>
 </nav>
 
 <!-- ═══════════════════════════════════════════════════════ PAGE 1: EXECUTIVE -->
@@ -436,7 +436,7 @@ const WEEKLY = [
     "cv": 93.4,
     "hp": 71.6,
     "tc": 99.8,
-    "una": 3.4,
+    "una": 96.6,
     "hpc": 96.7,
     "jrs": 6.3,
     "jrsA": 6.3,
@@ -448,7 +448,7 @@ const WEEKLY = [
     "cv": 93,
     "hp": 76.7,
     "tc": 99.2,
-    "una": 3.2,
+    "una": 96.8,
     "hpc": 97,
     "jrs": 5.8,
     "jrsA": 5.8,
@@ -460,7 +460,7 @@ const WEEKLY = [
     "cv": 93.7,
     "hp": 77.5,
     "tc": 98.9,
-    "una": 3,
+    "una": 97,
     "hpc": 97.4,
     "jrs": 6.5,
     "jrsA": 28.8,
@@ -472,7 +472,7 @@ const WEEKLY = [
     "cv": 95.2,
     "hp": 79.8,
     "tc": 98.5,
-    "una": 2.6,
+    "una": 97.4,
     "hpc": 97.6,
     "jrs": 31.1,
     "jrsA": 33.3,
@@ -484,7 +484,7 @@ const WEEKLY = [
     "cv": 96,
     "hp": 76.7,
     "tc": 98.3,
-    "una": 2.6,
+    "una": 97.4,
     "hpc": 97.8,
     "jrs": 34.4,
     "jrsA": 63.1,
@@ -496,7 +496,7 @@ const WEEKLY = [
     "cv": 98.7,
     "hp": 79.3,
     "tc": 98.2,
-    "una": 0.5,
+    "una": 99.5,
     "hpc": 99.7,
     "jrs": 72.3,
     "jrsA": 82.4,
@@ -508,7 +508,7 @@ const WEEKLY = [
     "cv": 99.3,
     "hp": 78.3,
     "tc": 98.2,
-    "una": 0.7,
+    "una": 99.3,
     "hpc": 99.5,
     "jrs": 84.5,
     "jrsA": 91.1,
@@ -520,7 +520,7 @@ const WEEKLY = [
     "cv": 99.5,
     "hp": 78.7,
     "tc": 98.1,
-    "una": 11.5,
+    "una": 88.5,
     "hpc": 89.4,
     "jrs": 87.4,
     "jrsA": 93.3,
@@ -532,7 +532,7 @@ const WEEKLY = [
     "cv": 99.6,
     "hp": 82.4,
     "tc": 98,
-    "una": 10.9,
+    "una": 89.1,
     "hpc": 90.3,
     "jrs": 93.5,
     "jrsA": 96.7,
@@ -544,7 +544,7 @@ const WEEKLY = [
     "cv": 99.7,
     "hp": 82.2,
     "tc": 98,
-    "una": 11.6,
+    "una": 88.4,
     "hpc": 91,
     "jrs": 94.7,
     "jrsA": 96.5,
@@ -556,7 +556,7 @@ const WEEKLY = [
     "cv": 99.4,
     "hp": 82.6,
     "tc": 97.8,
-    "una": 12.6,
+    "una": 87.4,
     "hpc": 92.5,
     "jrs": 95.2,
     "jrsA": 96.9,
@@ -568,7 +568,7 @@ const WEEKLY = [
     "cv": 99.2,
     "hp": 82.4,
     "tc": 97.7,
-    "una": 12.5,
+    "una": 87.5,
     "hpc": 89.4,
     "jrs": 95.4,
     "jrsA": 97.1,
@@ -580,7 +580,7 @@ const WEEKLY = [
     "cv": 99.2,
     "hp": 84.6,
     "tc": 97.6,
-    "una": 17,
+    "una": 83,
     "hpc": 85,
     "jrs": 96.1,
     "jrsA": 98.2,
@@ -592,7 +592,7 @@ const WEEKLY = [
     "cv": 99.2,
     "hp": 84.5,
     "tc": 97.4,
-    "una": 17.1,
+    "una": 82.9,
     "hpc": 85,
     "jrs": 96.5,
     "jrsA": 98.1,
@@ -604,7 +604,7 @@ const WEEKLY = [
     "cv": 99.4,
     "hp": 85,
     "tc": 97.3,
-    "una": 2,
+    "una": 98,
     "hpc": 98.5,
     "jrs": 96.3,
     "jrsA": 98.1,
@@ -616,7 +616,7 @@ const WEEKLY = [
     "cv": 99.5,
     "hp": 83.7,
     "tc": 97,
-    "una": 1.9,
+    "una": 98.1,
     "hpc": 99.1,
     "jrs": 96.9,
     "jrsA": 98.3,
@@ -628,7 +628,7 @@ const WEEKLY = [
     "cv": 99.7,
     "hp": 85.2,
     "tc": 96.9,
-    "una": 2,
+    "una": 98,
     "hpc": 98.2,
     "jrs": 98,
     "jrsA": 99.1,
@@ -640,7 +640,7 @@ const WEEKLY = [
     "cv": 99.6,
     "hp": 86.6,
     "tc": 96.9,
-    "una": 1.7,
+    "una": 98.3,
     "hpc": 98.5,
     "jrs": 96.6,
     "jrsA": 97.5,
@@ -652,7 +652,7 @@ const WEEKLY = [
     "cv": 99.7,
     "hp": 86.8,
     "tc": 96.7,
-    "una": 1.8,
+    "una": 98.2,
     "hpc": 98.6,
     "jrs": 96.4,
     "jrsA": 97.3,
@@ -664,7 +664,7 @@ const WEEKLY = [
     "cv": 99.8,
     "hp": 88.2,
     "tc": 96.8,
-    "una": 1.6,
+    "una": 98.4,
     "hpc": 98.6,
     "jrs": 96.8,
     "jrsA": 97.9,
@@ -676,7 +676,7 @@ const WEEKLY = [
     "cv": 99.9,
     "hp": 89.4,
     "tc": 97,
-    "una": 1.4,
+    "una": 98.6,
     "hpc": 98.8,
     "jrs": 98.6,
     "jrsA": 98.7,
@@ -688,7 +688,7 @@ const WEEKLY = [
     "cv": 100,
     "hp": 90.6,
     "tc": 96.8,
-    "una": 1.5,
+    "una": 98.5,
     "hpc": 98.9,
     "jrs": 98.4,
     "jrsA": 98.5,
@@ -700,7 +700,7 @@ const WEEKLY = [
     "cv": 99.9,
     "hp": 90.5,
     "tc": 96.9,
-    "una": 1.3,
+    "una": 98.7,
     "hpc": 98.8,
     "jrs": 97.9,
     "jrsA": 98,
@@ -712,7 +712,7 @@ const WEEKLY = [
     "cv": 99.9,
     "hp": 91.3,
     "tc": 100,
-    "una": 1.2,
+    "una": 98.8,
     "hpc": 99.4,
     "jrs": 7,
     "jrsA": 7,
@@ -724,7 +724,7 @@ const WEEKLY = [
     "cv": 100,
     "hp": 92.2,
     "tc": 100,
-    "una": 1.1,
+    "una": 98.9,
     "hpc": 98.9,
     "jrs": 8.2,
     "jrsA": 8.9,
@@ -736,7 +736,7 @@ const WEEKLY = [
     "cv": 99.9,
     "hp": 91.5,
     "tc": 99.9,
-    "una": 0.9,
+    "una": 99.1,
     "hpc": 99.1,
     "jrs": 75.3,
     "jrsA": 77.4,
@@ -748,7 +748,7 @@ const WEEKLY = [
     "cv": 100,
     "hp": 92.2,
     "tc": 99.9,
-    "una": 0.8,
+    "una": 99.2,
     "hpc": 99.3,
     "jrs": 85.6,
     "jrsA": 86.6,
@@ -760,7 +760,7 @@ const WEEKLY = [
     "cv": 99.9,
     "hp": 92.2,
     "tc": 99.9,
-    "una": 0.8,
+    "una": 99.2,
     "hpc": 99.4,
     "jrs": 91.1,
     "jrsA": 91.3,
@@ -772,7 +772,7 @@ const WEEKLY = [
     "cv": 99.7,
     "hp": 91.5,
     "tc": 99.9,
-    "una": 0.8,
+    "una": 99.2,
     "hpc": 99.6,
     "jrs": 91.7,
     "jrsA": 91.8,
@@ -784,7 +784,7 @@ const WEEKLY = [
     "cv": 99.6,
     "hp": 91.9,
     "tc": 99.9,
-    "una": 1.4,
+    "una": 98.6,
     "hpc": 98.7,
     "jrs": 95,
     "jrsA": 95.4,
@@ -796,7 +796,7 @@ const WEEKLY = [
     "cv": 99.8,
     "hp": 90.8,
     "tc": 99.8,
-    "una": 1.6,
+    "una": 98.4,
     "hpc": 98.9,
     "jrs": 96.2,
     "jrsA": 96.5,
@@ -1800,11 +1800,11 @@ function renderJRS() {
 // NAV + INIT
 // ════════════════════════════════════════════════════════════════════
 const pagesRendered = {};
-function nav(id) {
+function nav(id, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
   if (!pagesRendered[id]) {
     pagesRendered[id] = true;
     if (id==='trends')  { trendUpdate(); }
