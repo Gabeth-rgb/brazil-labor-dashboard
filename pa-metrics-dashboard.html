@@ -219,6 +219,17 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     </div>
   </div>
 
+  <div class="row c2">
+    <div class="card">
+      <h3>CV Non-Compliance by Project <span class="pill red">Top 15</span></h3>
+      <div class="ch tall" id="ch-proj-cv"></div>
+    </div>
+    <div class="card">
+      <h3>Timely CLAIM Non-Compliance by Project <span class="pill yellow">Top 15</span></h3>
+      <div class="ch tall" id="ch-proj-tc"></div>
+    </div>
+  </div>
+
   <div class="card">
     <h3>Full Project Compliance Matrix — Selected Week</h3>
     <div class="matrix-wrap">
@@ -394,7 +405,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
 // ════════════════════════════════════════════════════════════════════
 // EMBEDDED DATA  (generated from PA Metrics Raw Data.xlsx)
-// Generated: 2026-08-28T11:41:09.322Z
+// Generated: 2026-08-28T12:12:33.723Z
 // ════════════════════════════════════════════════════════════════════
 const WEEKS = [
   "2026-01-23",
@@ -1572,7 +1583,7 @@ function trendUpdate() {
 // ════════════════════════════════════════════════════════════════════
 function projUpdate() {
   // For now always show latest week data (full historical by project not pre-computed)
-  const projs = PROJ_LATEST;
+  const projs = PROJ_LATEST.slice().sort((a,b)=>b.hpNC-a.hpNC);
   const top15  = projs.slice(0,15);
 
   const hpChart = ch('ch-proj-hp');
@@ -1597,6 +1608,32 @@ function projUpdate() {
       {name:'JRS Non-Comp',   type:'bar',data:top15.slice().reverse().map(p=>p.jrsNC),barMaxWidth:10,itemStyle:{color:'#8a3ffc'}},
       {name:'Skills Non-Comp',type:'bar',data:top15.slice().reverse().map(p=>p.skNC), barMaxWidth:10,itemStyle:{color:'#4589ff'}}
     ]
+  });
+
+  const cvProjs = PROJ_LATEST.slice().sort((a,b)=>b.cvNC-a.cvNC);
+  const cvTop15 = cvProjs.slice(0,15);
+  const cvChart = ch('ch-proj-cv');
+  if (cvChart) cvChart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:120,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:cvTop15.slice().reverse().map(p=>p.name),axisLabel:{fontSize:10}},
+    series:[{type:'bar',data:cvTop15.slice().reverse().map(p=>p.cvNC),barMaxWidth:18,
+      itemStyle:{color:'#da1e28'},
+      label:{show:true,position:'right',fontSize:10}}]
+  });
+
+  const tcProjs = PROJ_LATEST.slice().sort((a,b)=>b.tcNC-a.tcNC);
+  const tcTop15 = tcProjs.slice(0,15);
+  const tcChart = ch('ch-proj-tc');
+  if (tcChart) tcChart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:120,right:20,top:10,bottom:30},
+    xAxis:{type:'value',axisLabel:{fontSize:10}},
+    yAxis:{type:'category',data:tcTop15.slice().reverse().map(p=>p.name),axisLabel:{fontSize:10}},
+    series:[{type:'bar',data:tcTop15.slice().reverse().map(p=>p.tcNC),barMaxWidth:18,
+      itemStyle:{color:p=>p.value>5?'#da1e28':p.value>2?'#f1c21b':'#4589ff'},
+      label:{show:true,position:'right',fontSize:10}}]
   });
 
   // Matrix table
