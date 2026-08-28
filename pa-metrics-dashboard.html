@@ -106,7 +106,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
       <div class="ch" id="ch-radar"></div>
     </div>
     <div class="card">
-      <h3>Compliance Score Evolution <span class="pill blue">Filtered range</span></h3>
+      <h3>Overall Compliance % <span class="pill blue">Filtered range</span></h3>
       <div class="ch" id="ch-exec-trend"></div>
     </div>
   </div>
@@ -394,7 +394,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
 // ════════════════════════════════════════════════════════════════════
 // EMBEDDED DATA  (generated from PA Metrics Raw Data.xlsx)
-// Generated: 2026-08-28T04:28:58.733Z
+// Generated: 2026-08-28T11:30:28.279Z
 // ════════════════════════════════════════════════════════════════════
 const WEEKS = [
   "2026-01-23",
@@ -1417,19 +1417,37 @@ function execUpdate() {
     legend:{data:['Latest Week','First Week'],bottom:0,textStyle:{fontSize:11}}
   });
 
-  // Executive trend line
+  // Executive trend line — overall compliance % (avg of CV, Hrs Plan, Timely Claim, JRS&Skills)
   const execTrend = ch('ch-exec-trend');
-  if (execTrend) execTrend.setOption({
-    tooltip:{trigger:'axis'},
-    legend:{data:['CV','Hrs Plan','JRS&Skills'],bottom:0,textStyle:{fontSize:11}},
-    xAxis:{type:'category',data:fd.map(d=>fmtWeek(d.w)),axisLabel:{rotate:30,fontSize:10}},
-    yAxis:{type:'value',min:0,max:105,axisLabel:{formatter:v=>v+'%',fontSize:10}},
-    series:[
-      {name:'CV',type:'line',data:fd.map(d=>d.cv),smooth:true,lineStyle:{color:'#24a148',width:2},symbol:'none'},
-      {name:'Hrs Plan',type:'line',data:fd.map(d=>d.hp),smooth:true,lineStyle:{color:'#f1c21b',width:2},symbol:'none'},
-      {name:'JRS&Skills',type:'line',data:fd.map(d=>d.jrs),smooth:true,lineStyle:{color:'#8a3ffc',width:2},symbol:'none'}
-    ]
-  });
+  if (execTrend) {
+    const overallData = fd.map(d => +((d.cv + d.hp + d.tc + d.jrs) / 4).toFixed(1));
+    const overallAvg  = +(overallData.reduce((s,v)=>s+v,0)/overallData.length).toFixed(1);
+    const minVal      = Math.max(0, Math.floor(Math.min(...overallData) / 5) * 5 - 5);
+    execTrend.setOption({
+      tooltip:{trigger:'axis',formatter:params=>`${params[0].name}<br/><b>Overall: ${params[0].value}%</b>`},
+      legend:{data:['Overall Compliance'],bottom:0,textStyle:{fontSize:11}},
+      xAxis:{type:'category',data:fd.map(d=>fmtWeek(d.w)),axisLabel:{rotate:30,fontSize:10}},
+      yAxis:{type:'value',min:minVal,max:105,axisLabel:{formatter:v=>v+'%',fontSize:10}},
+      series:[{
+        name:'Overall Compliance',
+        type:'line',
+        data:overallData,
+        smooth:true,
+        lineStyle:{color:'#4589ff',width:2.5},
+        symbol:'circle',symbolSize:4,
+        itemStyle:{color:'#4589ff'},
+        areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(69,137,255,.30)'},{offset:1,color:'rgba(69,137,255,.02)'}]}},
+        markLine:{data:[
+          {yAxis:96.3,lineStyle:{color:'#24a148',type:'dashed',width:1.5},label:{formatter:'Target 96.3%',color:'#24a148',fontSize:10}}
+        ]}
+      }],
+      graphic:[{
+        type:'text',
+        right:18,top:10,
+        style:{text:`Avg: ${overallAvg}%`,font:'bold 12px sans-serif',fill:'#57606a'}
+      }]
+    });
+  }
 
   // Gauges
   function makeGauge(id, val, label) {
