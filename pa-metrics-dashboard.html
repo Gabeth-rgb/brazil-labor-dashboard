@@ -1413,6 +1413,7 @@ function execUpdate() {
       lineStyle:{type:'dashed'},
       itemStyle:{color:'#f1c21b'}
     }]},
+    ],
     legend:{data:['Latest Week','First Week'],bottom:0,textStyle:{fontSize:11}}
   });
 
@@ -1441,7 +1442,7 @@ function execUpdate() {
       detail:{formatter:v=>v.toFixed(1)+'%',fontSize:20,fontWeight:700,color:col,offsetCenter:[0,'10%']},
       title:{offsetCenter:[0,'40%'],fontSize:11,color:'#57606a'},
       data:[{value:val,name:label}]
-    }]);
+    }]});
   }
   makeGauge('ch-cv-gauge',   latest.cv,   'CV Updated');
   makeGauge('ch-hp-gauge',   latest.hp,   'Within ±20/10');
