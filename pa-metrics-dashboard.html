@@ -322,7 +322,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <!-- Pattern annotations -->
   <div class="hbox warn">
     <strong>&#9888; Seasonal Reset Pattern Detected</strong>
-    The dataset shows two distinct JRS &amp; Skills reset cycles: Jan–Feb 2026 the population started near 0% (6.3%) and climbed rapidly to 98%+ by March, then reset again in early July 2026 (dropping to 7%) before recovering. This corresponds to the annual/semi-annual IBM PBC/JRS evaluation cycles. Managers should pre-plan to clear their teams before the reset date.
+    The dataset shows two distinct JRS &amp; Skills reset cycles: Jan–Feb 2026 the population started near 0% and climbed rapidly to 98%+ by March, then reset again in early July 2026 (dropping to ~7%) before recovering. This corresponds to the annual/semi-annual IBM PBC/JRS evaluation cycles. Managers should pre-plan to clear their teams before the reset date.
   </div>
   <div class="hbox ok">
     <strong>&#10003; JRS Assessed recovers faster than Skills Proficiency</strong>
@@ -337,7 +337,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
   <div class="hbox crit">
     <strong>&#128680; Hours Plan Compliance — Persistent Gap</strong>
-    Hours Plan compliance is the lowest-performing metric across the entire dataset, starting at 71.6% in Jan 2026 and slowly improving to ~91–92% by mid-2026 — still the most lagging indicator. Roughly 1 in 10 practitioners consistently deviates beyond the ±10–20% threshold every week. Projects Bradesco (31 non-comp), Vale (23), Itaú (18), and Vigação Lago team (17) account for a disproportionate share of violations in the latest week.
+    Hours Plan compliance is the lowest-performing metric across the entire dataset, starting at 69.6% in Jan 2026 and slowly improving to ~90% by mid-2026 — still the most lagging indicator. Roughly 1 in 10 practitioners consistently deviates beyond the ±10–20% threshold every week. Projects Bradesco (31 non-comp), Vale (23), Itaú (18), and Vigação Lago team (17) account for a disproportionate share of violations in the latest week.
   </div>
 
   <div class="hbox warn">
@@ -375,13 +375,13 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     <table>
       <thead><tr><th>Metric</th><th>Week 1 (Jan 23)</th><th>Latest (Aug 21)</th><th>Change</th><th>Status</th></tr></thead>
       <tbody>
-        <tr><td>CV Compliance</td><td>93.4%</td><td>99.8%</td><td style="color:#198038">+6.4 pp</td><td><span class="bc green">Excellent</span></td></tr>
-        <tr><td>Hours Plan Compliance</td><td>71.6%</td><td>90.8%</td><td style="color:#198038">+19.2 pp</td><td><span class="bc yellow">Improving</span></td></tr>
+        <tr><td>CV Compliance</td><td>93.0%</td><td>99.8%</td><td style="color:#198038">+6.8 pp</td><td><span class="bc green">Excellent</span></td></tr>
+        <tr><td>Hours Plan Compliance</td><td>69.6%</td><td>89.9%</td><td style="color:#198038">+20.3 pp</td><td><span class="bc yellow">Improving</span></td></tr>
         <tr><td>Timely Claim</td><td>99.8%</td><td>99.8%</td><td style="color:#57606a">0.0 pp</td><td><span class="bc green">Stable</span></td></tr>
-        <tr><td>Hours Plan Completeness</td><td>96.7%</td><td>98.9%</td><td style="color:#198038">+2.2 pp</td><td><span class="bc green">Good</span></td></tr>
-        <tr><td>JRS &amp; Skills Combined</td><td>6.3%</td><td>96.2%</td><td style="color:#198038">+89.9 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
-        <tr><td>JRS Assessed</td><td>6.3%</td><td>96.5%</td><td style="color:#198038">+90.2 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
-        <tr><td>Skills Proficiency</td><td>6.4%</td><td>96.9%</td><td style="color:#198038">+90.5 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
+        <tr><td>Hours Plan Completeness</td><td>96.5%</td><td>98.8%</td><td style="color:#198038">+2.3 pp</td><td><span class="bc green">Good</span></td></tr>
+        <tr><td>JRS &amp; Skills Combined</td><td>0.0%</td><td>95.8%</td><td style="color:#198038">+95.8 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
+        <tr><td>JRS Assessed</td><td>0.0%</td><td>96.2%</td><td style="color:#198038">+96.2 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
+        <tr><td>Skills Proficiency</td><td>0.1%</td><td>96.6%</td><td style="color:#198038">+96.5 pp</td><td><span class="bc blue">Cycle-driven</span></td></tr>
         <tr><td>No Future Assignment</td><td>3.4% flagged</td><td>1.6% flagged</td><td style="color:#198038">-1.8 pp</td><td><span class="bc green">Improved</span></td></tr>
       </tbody>
     </table>
@@ -394,7 +394,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
 // ════════════════════════════════════════════════════════════════════
 // EMBEDDED DATA  (generated from PA Metrics Raw Data.xlsx)
-// Generated: 2026-08-28T03:55:19.693Z
+// Generated: 2026-08-28T04:28:58.733Z
 // ════════════════════════════════════════════════════════════════════
 const WEEKS = [
   "2026-01-23",
@@ -434,374 +434,374 @@ const WEEKLY = [
   {
     "w": "2026-01-23",
     "total": 1516,
-    "cv": 93.4,
-    "hp": 71.6,
+    "cv": 93,
+    "hp": 69.6,
     "tc": 99.8,
     "una": 96.6,
-    "hpc": 96.7,
-    "jrs": 6.3,
-    "jrsA": 6.3,
-    "sk": 6.4
+    "hpc": 96.5,
+    "jrs": 0,
+    "jrsA": 0,
+    "sk": 0.1
   },
   {
     "w": "2026-01-30",
     "total": 1501,
-    "cv": 93,
-    "hp": 76.7,
+    "cv": 92.6,
+    "hp": 75.2,
     "tc": 99.2,
     "una": 96.8,
-    "hpc": 97,
-    "jrs": 5.8,
-    "jrsA": 5.8,
-    "sk": 5.9
+    "hpc": 96.8,
+    "jrs": 0,
+    "jrsA": 0,
+    "sk": 0.1
   },
   {
     "w": "2026-02-06",
     "total": 1499,
-    "cv": 93.7,
-    "hp": 77.5,
+    "cv": 93.3,
+    "hp": 76,
     "tc": 98.9,
     "una": 97,
-    "hpc": 97.4,
-    "jrs": 6.5,
-    "jrsA": 28.8,
-    "sk": 6.5
+    "hpc": 97.2,
+    "jrs": 0.5,
+    "jrsA": 24.2,
+    "sk": 0.6
   },
   {
     "w": "2026-02-13",
     "total": 1487,
-    "cv": 95.2,
-    "hp": 79.8,
-    "tc": 98.5,
+    "cv": 94.8,
+    "hp": 78.5,
+    "tc": 98.4,
     "una": 97.4,
-    "hpc": 97.6,
-    "jrs": 31.1,
-    "jrsA": 33.3,
-    "sk": 31.5
+    "hpc": 97.4,
+    "jrs": 26.5,
+    "jrsA": 28.8,
+    "sk": 26.9
   },
   {
     "w": "2026-02-20",
     "total": 1487,
-    "cv": 96,
-    "hp": 76.7,
-    "tc": 98.3,
+    "cv": 95.8,
+    "hp": 75.2,
+    "tc": 98.2,
     "una": 97.4,
-    "hpc": 97.8,
-    "jrs": 34.4,
-    "jrsA": 63.1,
-    "sk": 34.6
+    "hpc": 97.7,
+    "jrs": 30.3,
+    "jrsA": 60.7,
+    "sk": 30.4
   },
   {
     "w": "2026-02-27",
     "total": 1490,
-    "cv": 98.7,
-    "hp": 79.3,
-    "tc": 98.2,
+    "cv": 98.6,
+    "hp": 78,
+    "tc": 98.1,
     "una": 99.5,
-    "hpc": 99.7,
-    "jrs": 72.3,
-    "jrsA": 82.4,
-    "sk": 72.3
+    "hpc": 99.6,
+    "jrs": 70.5,
+    "jrsA": 81.3,
+    "sk": 70.5
   },
   {
     "w": "2026-03-06",
     "total": 1480,
     "cv": 99.3,
-    "hp": 78.3,
-    "tc": 98.2,
+    "hp": 76.8,
+    "tc": 98.1,
     "una": 99.3,
-    "hpc": 99.5,
-    "jrs": 84.5,
-    "jrsA": 91.1,
-    "sk": 84.6
+    "hpc": 99.4,
+    "jrs": 83.4,
+    "jrsA": 90.5,
+    "sk": 83.5
   },
   {
     "w": "2026-03-13",
     "total": 1472,
     "cv": 99.5,
-    "hp": 78.7,
-    "tc": 98.1,
+    "hp": 77.2,
+    "tc": 98,
     "una": 88.5,
-    "hpc": 89.4,
-    "jrs": 87.4,
-    "jrsA": 93.3,
-    "sk": 87.4
+    "hpc": 88.7,
+    "jrs": 86.5,
+    "jrsA": 92.8,
+    "sk": 86.6
   },
   {
     "w": "2026-03-20",
     "total": 1468,
     "cv": 99.6,
-    "hp": 82.4,
-    "tc": 98,
+    "hp": 81.1,
+    "tc": 97.8,
     "una": 89.1,
-    "hpc": 90.3,
-    "jrs": 93.5,
-    "jrsA": 96.7,
-    "sk": 93.5
+    "hpc": 89.6,
+    "jrs": 93,
+    "jrsA": 96.4,
+    "sk": 93.1
   },
   {
     "w": "2026-03-27",
     "total": 1468,
     "cv": 99.7,
-    "hp": 82.2,
-    "tc": 98,
+    "hp": 81,
+    "tc": 97.8,
     "una": 88.4,
-    "hpc": 91,
-    "jrs": 94.7,
-    "jrsA": 96.5,
-    "sk": 94.8
+    "hpc": 90.4,
+    "jrs": 94.3,
+    "jrsA": 96.3,
+    "sk": 94.4
   },
   {
     "w": "2026-04-03",
     "total": 1455,
-    "cv": 99.4,
-    "hp": 82.6,
-    "tc": 97.8,
+    "cv": 99.3,
+    "hp": 81.4,
+    "tc": 97.7,
     "una": 87.4,
-    "hpc": 92.5,
-    "jrs": 95.2,
-    "jrsA": 96.9,
-    "sk": 95.3
+    "hpc": 92,
+    "jrs": 94.9,
+    "jrsA": 96.7,
+    "sk": 94.9
   },
   {
     "w": "2026-04-10",
     "total": 1445,
     "cv": 99.2,
-    "hp": 82.4,
-    "tc": 97.7,
+    "hp": 81.2,
+    "tc": 97.6,
     "una": 87.5,
-    "hpc": 89.4,
-    "jrs": 95.4,
-    "jrsA": 97.1,
-    "sk": 95.4
+    "hpc": 88.7,
+    "jrs": 95.1,
+    "jrsA": 96.9,
+    "sk": 95.1
   },
   {
     "w": "2026-04-17",
     "total": 1444,
     "cv": 99.2,
-    "hp": 84.6,
-    "tc": 97.6,
+    "hp": 83.5,
+    "tc": 97.4,
     "una": 83,
-    "hpc": 85,
-    "jrs": 96.1,
-    "jrsA": 98.2,
-    "sk": 96.1
+    "hpc": 84,
+    "jrs": 95.9,
+    "jrsA": 98.1,
+    "sk": 95.9
   },
   {
     "w": "2026-04-24",
     "total": 1447,
     "cv": 99.2,
-    "hp": 84.5,
-    "tc": 97.4,
+    "hp": 83.4,
+    "tc": 97.3,
     "una": 82.9,
-    "hpc": 85,
-    "jrs": 96.5,
-    "jrsA": 98.1,
-    "sk": 96.7
+    "hpc": 84,
+    "jrs": 96.3,
+    "jrsA": 98,
+    "sk": 96.5
   },
   {
     "w": "2026-05-01",
     "total": 1444,
-    "cv": 99.4,
-    "hp": 85,
-    "tc": 97.3,
+    "cv": 99.3,
+    "hp": 84,
+    "tc": 97.1,
     "una": 98,
-    "hpc": 98.5,
-    "jrs": 96.3,
-    "jrsA": 98.1,
-    "sk": 96.4
+    "hpc": 98.4,
+    "jrs": 96,
+    "jrsA": 98,
+    "sk": 96.2
   },
   {
     "w": "2026-05-08",
     "total": 1437,
     "cv": 99.5,
-    "hp": 83.7,
-    "tc": 97,
+    "hp": 82.6,
+    "tc": 96.8,
     "una": 98.1,
-    "hpc": 99.1,
-    "jrs": 96.9,
-    "jrsA": 98.3,
-    "sk": 97.1
+    "hpc": 99,
+    "jrs": 96.7,
+    "jrsA": 98.2,
+    "sk": 96.9
   },
   {
     "w": "2026-05-15",
     "total": 1435,
-    "cv": 99.7,
-    "hp": 85.2,
-    "tc": 96.9,
+    "cv": 99.6,
+    "hp": 84.1,
+    "tc": 96.7,
     "una": 98,
-    "hpc": 98.2,
-    "jrs": 98,
-    "jrsA": 99.1,
-    "sk": 98
+    "hpc": 98.1,
+    "jrs": 97.8,
+    "jrsA": 99,
+    "sk": 97.9
   },
   {
     "w": "2026-05-22",
     "total": 1461,
     "cv": 99.6,
-    "hp": 86.6,
-    "tc": 96.9,
+    "hp": 85.7,
+    "tc": 96.7,
     "una": 98.3,
-    "hpc": 98.5,
-    "jrs": 96.6,
-    "jrsA": 97.5,
-    "sk": 98.3
+    "hpc": 98.4,
+    "jrs": 96.4,
+    "jrsA": 97.4,
+    "sk": 98.2
   },
   {
     "w": "2026-05-29",
     "total": 1464,
     "cv": 99.7,
-    "hp": 86.8,
-    "tc": 96.7,
+    "hp": 85.8,
+    "tc": 96.5,
     "una": 98.2,
-    "hpc": 98.6,
-    "jrs": 96.4,
-    "jrsA": 97.3,
-    "sk": 98.5
+    "hpc": 98.5,
+    "jrs": 96.1,
+    "jrsA": 97.1,
+    "sk": 98.4
   },
   {
     "w": "2026-06-05",
     "total": 1460,
     "cv": 99.8,
-    "hp": 88.2,
-    "tc": 96.8,
+    "hp": 87.2,
+    "tc": 96.6,
     "una": 98.4,
-    "hpc": 98.6,
-    "jrs": 96.8,
-    "jrsA": 97.9,
-    "sk": 98.5
+    "hpc": 98.5,
+    "jrs": 96.5,
+    "jrsA": 97.8,
+    "sk": 98.4
   },
   {
     "w": "2026-06-12",
     "total": 1453,
     "cv": 99.9,
-    "hp": 89.4,
-    "tc": 97,
+    "hp": 88.6,
+    "tc": 96.8,
     "una": 98.6,
-    "hpc": 98.8,
-    "jrs": 98.6,
-    "jrsA": 98.7,
+    "hpc": 98.7,
+    "jrs": 98.4,
+    "jrsA": 98.6,
     "sk": 99.5
   },
   {
     "w": "2026-06-19",
     "total": 1456,
     "cv": 100,
-    "hp": 90.6,
-    "tc": 96.8,
+    "hp": 89.9,
+    "tc": 96.6,
     "una": 98.5,
-    "hpc": 98.9,
-    "jrs": 98.4,
-    "jrsA": 98.5,
+    "hpc": 98.8,
+    "jrs": 98.2,
+    "jrsA": 98.4,
     "sk": 99.5
   },
   {
     "w": "2026-06-26",
     "total": 1458,
     "cv": 99.9,
-    "hp": 90.5,
-    "tc": 96.9,
+    "hp": 89.8,
+    "tc": 96.7,
     "una": 98.7,
-    "hpc": 98.8,
-    "jrs": 97.9,
-    "jrsA": 98,
+    "hpc": 98.7,
+    "jrs": 97.7,
+    "jrsA": 97.9,
     "sk": 99.5
   },
   {
     "w": "2026-07-03",
     "total": 1431,
     "cv": 99.9,
-    "hp": 91.3,
+    "hp": 90.6,
     "tc": 100,
     "una": 98.8,
-    "hpc": 99.4,
-    "jrs": 7,
-    "jrsA": 7,
-    "sk": 7
+    "hpc": 99.3,
+    "jrs": 0,
+    "jrsA": 0,
+    "sk": 0
   },
   {
     "w": "2026-07-10",
     "total": 1414,
     "cv": 100,
-    "hp": 92.2,
+    "hp": 91.6,
     "tc": 100,
     "una": 98.9,
-    "hpc": 98.9,
-    "jrs": 8.2,
-    "jrsA": 8.9,
-    "sk": 8.3
+    "hpc": 98.8,
+    "jrs": 1.3,
+    "jrsA": 2.1,
+    "sk": 1.4
   },
   {
     "w": "2026-07-17",
     "total": 1448,
     "cv": 99.9,
-    "hp": 91.5,
+    "hp": 90.8,
     "tc": 99.9,
     "una": 99.1,
-    "hpc": 99.1,
-    "jrs": 75.3,
-    "jrsA": 77.4,
-    "sk": 75.5
+    "hpc": 99,
+    "jrs": 73.4,
+    "jrsA": 75.7,
+    "sk": 73.6
   },
   {
     "w": "2026-07-24",
     "total": 1444,
     "cv": 100,
-    "hp": 92.2,
-    "tc": 99.9,
+    "hp": 91.6,
+    "tc": 99.8,
     "una": 99.2,
-    "hpc": 99.3,
-    "jrs": 85.6,
-    "jrsA": 86.6,
-    "sk": 85.7
+    "hpc": 99.2,
+    "jrs": 84.4,
+    "jrsA": 85.5,
+    "sk": 84.5
   },
   {
     "w": "2026-07-31",
     "total": 1460,
     "cv": 99.9,
-    "hp": 92.2,
+    "hp": 91.5,
     "tc": 99.9,
     "una": 99.2,
-    "hpc": 99.4,
-    "jrs": 91.1,
-    "jrsA": 91.3,
-    "sk": 91.2
+    "hpc": 99.3,
+    "jrs": 90.3,
+    "jrsA": 90.6,
+    "sk": 90.5
   },
   {
     "w": "2026-08-07",
     "total": 1445,
     "cv": 99.7,
-    "hp": 91.5,
-    "tc": 99.9,
+    "hp": 90.7,
+    "tc": 99.8,
     "una": 99.2,
-    "hpc": 99.6,
-    "jrs": 91.7,
-    "jrsA": 91.8,
-    "sk": 91.8
+    "hpc": 99.5,
+    "jrs": 91,
+    "jrsA": 91.1,
+    "sk": 91.1
   },
   {
     "w": "2026-08-14",
     "total": 1428,
     "cv": 99.6,
-    "hp": 91.9,
-    "tc": 99.9,
+    "hp": 91.1,
+    "tc": 99.8,
     "una": 98.6,
-    "hpc": 98.7,
-    "jrs": 95,
-    "jrsA": 95.4,
-    "sk": 95.1
+    "hpc": 98.6,
+    "jrs": 94.5,
+    "jrsA": 95,
+    "sk": 94.7
   },
   {
     "w": "2026-08-21",
     "total": 1439,
     "cv": 99.8,
-    "hp": 90.8,
+    "hp": 89.9,
     "tc": 99.8,
     "una": 98.4,
-    "hpc": 98.9,
-    "jrs": 96.2,
-    "jrsA": 96.5,
-    "sk": 96.9
+    "hpc": 98.8,
+    "jrs": 95.8,
+    "jrsA": 96.2,
+    "sk": 96.6
   }
 ];
 
