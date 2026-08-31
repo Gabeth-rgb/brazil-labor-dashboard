@@ -424,9 +424,17 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 <!-- ═══════════════════════════════════════════════════════ PAGE 8: BY EMPLOYEE -->
 <div id="byemployee" class="page">
   <div class="card" style="margin-bottom:16px">
-    <h3>&#128100; Employee Compliance Matrix — Non-Compliance Occurrences (across all 31 weeks)</h3>
+    <h3 id="emp-card-title">&#128100; Employee Compliance Matrix — Non-Compliance Occurrences <span id="emp-title-badge" class="pill blue">All 31 weeks</span></h3>
     <!-- Filters -->
     <div class="fr" id="emp-filt-bar" style="margin-bottom:14px">
+      <!-- View toggle -->
+      <span style="display:flex;gap:0;border:1px solid #dde1e7;border-radius:6px;overflow:hidden;font-size:12px;font-weight:600;align-self:center">
+        <button id="emp-view-all" onclick="empSetView('all')"
+                style="padding:5px 14px;border:none;cursor:pointer;background:#4589ff;color:#fff">All Weeks</button>
+        <button id="emp-view-lw"  onclick="empSetView('lw')"
+                style="padding:5px 14px;border:none;cursor:pointer;background:#f0f2f5;color:#57606a">Latest Week</button>
+      </span>
+
       <label>Tower</label>
       <select id="emp-flt-tower" onchange="empTowerChange()">
         <option value="">All Towers</option>
@@ -493,7 +501,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
 
 // ════════════════════════════════════════════════════════════════════
 // EMBEDDED DATA  (generated from PA Metrics Raw Data.xlsx)
-// Generated: 2026-08-28T19:20:04.164Z
+// Generated: 2026-08-31T02:48:58.590Z
 // ════════════════════════════════════════════════════════════════════
 const WEEKS = [
   "2026-01-23",
@@ -2025,6 +2033,27 @@ document.addEventListener('click',e=>{
 // ════════════════════════════════════════════════════════════════════
 let empSortCol = 'tot';
 let empSortAsc = false;
+let empView    = 'all';   // 'all' | 'lw'
+
+function empSetView(v){
+  empView = v;
+  // toggle button styles
+  const btnAll = document.getElementById('emp-view-all');
+  const btnLw  = document.getElementById('emp-view-lw');
+  if(btnAll && btnLw){
+    btnAll.style.background = v==='all' ? '#4589ff' : '#f0f2f5';
+    btnAll.style.color      = v==='all' ? '#fff'    : '#57606a';
+    btnLw.style.background  = v==='lw'  ? '#4589ff' : '#f0f2f5';
+    btnLw.style.color       = v==='lw'  ? '#fff'    : '#57606a';
+  }
+  // update badge
+  const badge = document.getElementById('emp-title-badge');
+  if(badge) badge.textContent = v==='lw' ? 'Latest week (Aug 21)' : 'All 31 weeks';
+  // reset sort to appropriate default
+  empSortCol = v==='lw' ? 'ltot' : 'tot';
+  empSortAsc = false;
+  renderEmpMatrix();
+}
 
 // Populate Tower select on first visit
 function initEmpFilters(){
@@ -2069,8 +2098,11 @@ function empRefreshMgrDropdown(){
 }
 
 function empSort(col){
-  if(empSortCol===col){ empSortAsc=!empSortAsc; }
-  else { empSortCol=col; empSortAsc=false; }
+  // In lw mode, map the data-key to the lxx equivalent
+  const lwMap = {cv:'lcv',hp:'lhp',tc:'ltc',jr:'ljr',sk:'lsk',tot:'ltot'};
+  const effectiveCol = (empView==='lw' && lwMap[col]) ? lwMap[col] : col;
+  if(empSortCol===effectiveCol){ empSortAsc=!empSortAsc; }
+  else { empSortCol=effectiveCol; empSortAsc=false; }
   renderEmpMatrix();
 }
 
@@ -2079,55 +2111,87 @@ function renderEmpMatrix(){
   const projs = msGetValues('msel-emp-proj-list');
   const mgrs  = msGetValues('msel-emp-mgr-list');
   const name  = (document.getElementById('emp-flt-name').value||'').toLowerCase();
+  const isLw  = empView === 'lw';
 
   let rows = EMP_DATA;
-  if(tower)       rows = rows.filter(e=>e.t===tower);
-  if(projs.length)rows = rows.filter(e=>projs.includes(e.p));
-  if(mgrs.length) rows = rows.filter(e=>mgrs.includes(e.m));
-  if(name)        rows = rows.filter(e=>e.n.toLowerCase().includes(name));
+  if(tower)        rows = rows.filter(e=>e.t===tower);
+  if(projs.length) rows = rows.filter(e=>projs.includes(e.p));
+  if(mgrs.length)  rows = rows.filter(e=>mgrs.includes(e.m));
+  if(name)         rows = rows.filter(e=>e.n.toLowerCase().includes(name));
 
-  // Sort
+  // In Latest Week mode only show employees who actually had an issue that week
+  if(isLw) rows = rows.filter(e=>e.ltot > 0);
+
+  // Sort — in lw mode use lxx fields, in all mode use the cumulative fields
   const col = empSortCol;
   rows = rows.slice().sort((a,b)=>{
-    const av = typeof a[col]==='number'?a[col]:a[col].toLowerCase();
-    const bv = typeof b[col]==='number'?b[col]:b[col].toLowerCase();
+    const av = typeof a[col]==='number' ? a[col] : (a[col]||'').toLowerCase();
+    const bv = typeof b[col]==='number' ? b[col] : (b[col]||'').toLowerCase();
     return empSortAsc ? (av>bv?1:av<bv?-1:0) : (bv>av?1:bv<av?-1:0);
   });
 
-  // Update sort arrows
-  ['cv','hp','tc','jr','sk','tot'].forEach(c=>{
-    const arrowEl = document.getElementById('emp-arr-'+c);
-    if(arrowEl) arrowEl.textContent = empSortCol===c ? (empSortAsc?'▴':'▾') : '';
+  // Update sort arrows — arrow IDs are 'cv','hp','tc','jr','sk','tot'
+  // In lw mode the sort columns are lcv/lhp/ltc/ljr/lsk/ltot
+  const arrowKeys = isLw
+    ? {lcv:'cv',lhp:'hp',ltc:'tc',ljr:'jr',lsk:'sk',ltot:'tot'}
+    : {cv:'cv',hp:'hp',tc:'tc',jr:'jr',sk:'sk',tot:'tot'};
+  ['cv','hp','tc','jr','sk','tot'].forEach(aid=>{
+    const el = document.getElementById('emp-arr-'+aid);
+    if(!el) return;
+    const matchKey = Object.keys(arrowKeys).find(k=>arrowKeys[k]===aid);
+    el.textContent = (empSortCol===matchKey) ? (empSortAsc?'▴':'▾') : '';
   });
 
-  document.getElementById('emp-mat-rc').textContent =
-    `${rows.length.toLocaleString()} employee${rows.length!==1?'s':''} shown`;
+  const rcEl = document.getElementById('emp-mat-rc');
+  if(isLw){
+    rcEl.textContent = `${rows.length.toLocaleString()} employee${rows.length!==1?'s':''} with non-compliance in latest week (Aug 21 2026)`;
+  } else {
+    rcEl.textContent = `${rows.length.toLocaleString()} employee${rows.length!==1?'s':''} shown`;
+  }
 
   function ncBadge(v, threshRed, threshYel){
     if(!v) return `<span class="bc green">0</span>`;
     if(v>=threshRed) return `<span class="bc red">${v}</span>`;
-    if(v>=threshYel) return `<span class="bc yellow">${v}</span>`;
+    if(threshYel && v>=threshYel) return `<span class="bc yellow">${v}</span>`;
     return `<span class="bc yellow">${v}</span>`;
   }
 
   const tbody = document.getElementById('tbl-emp-matrix-body');
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:#8a9099;padding:20px">No employees match the selected filters.</td></tr>';
+    tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:#8a9099;padding:20px">${isLw?'No employees had a non-compliance in the latest week with these filters.':'No employees match the selected filters.'}</td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map(e=>`<tr>
-    <td style="min-width:180px">${e.n}</td>
-    <td>${e.t}</td>
-    <td>${e.p}</td>
-    <td style="max-width:200px;white-space:normal">${e.m}</td>
-    <td style="text-align:center">${ncBadge(e.cv,5,1)}</td>
-    <td style="text-align:center">${ncBadge(e.hp,10,3)}</td>
-    <td style="text-align:center">${ncBadge(e.tc,10,3)}</td>
-    <td style="text-align:center">${ncBadge(e.jr,15,5)}</td>
-    <td style="text-align:center">${ncBadge(e.sk,15,5)}</td>
-    <td style="text-align:center"><b>${e.tot}</b></td>
-    <td style="text-align:center;color:#57606a">${e.w}</td>
-  </tr>`).join('');
+
+  if(isLw){
+    // Latest week: show lxx fields; sort column defaults to ltot
+    tbody.innerHTML = rows.map(e=>`<tr>
+      <td style="min-width:180px">${e.n}</td>
+      <td>${e.t}</td>
+      <td>${e.p}</td>
+      <td style="max-width:200px;white-space:normal">${e.m}</td>
+      <td style="text-align:center">${ncBadge(e.lcv,3,1)}</td>
+      <td style="text-align:center">${ncBadge(e.lhp,1,1)}</td>
+      <td style="text-align:center">${ncBadge(e.ltc,1,1)}</td>
+      <td style="text-align:center">${ncBadge(e.ljr,1,1)}</td>
+      <td style="text-align:center">${ncBadge(e.lsk,1,1)}</td>
+      <td style="text-align:center"><b>${e.ltot}</b></td>
+      <td style="text-align:center;color:#57606a">${e.w}</td>
+    </tr>`).join('');
+  } else {
+    tbody.innerHTML = rows.map(e=>`<tr>
+      <td style="min-width:180px">${e.n}</td>
+      <td>${e.t}</td>
+      <td>${e.p}</td>
+      <td style="max-width:200px;white-space:normal">${e.m}</td>
+      <td style="text-align:center">${ncBadge(e.cv,5,1)}</td>
+      <td style="text-align:center">${ncBadge(e.hp,10,3)}</td>
+      <td style="text-align:center">${ncBadge(e.tc,10,3)}</td>
+      <td style="text-align:center">${ncBadge(e.jr,15,5)}</td>
+      <td style="text-align:center">${ncBadge(e.sk,15,5)}</td>
+      <td style="text-align:center"><b>${e.tot}</b></td>
+      <td style="text-align:center;color:#57606a">${e.w}</td>
+    </tr>`).join('');
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════
