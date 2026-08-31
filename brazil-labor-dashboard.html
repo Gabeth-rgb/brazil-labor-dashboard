@@ -154,6 +154,7 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   <button onclick="nav('rest')">Rest Between Workdays</button>
   <button onclick="nav('offenders')">Top Offenders</button>
   <button onclick="nav('projects')">Projects &amp; Managers</button>
+  <button onclick="nav('raw-data')">Raw Data</button>
   <button onclick="nav('ai-ask')">&#129302; Ask AI</button>
 </nav>
 
@@ -523,6 +524,137 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
   </div>
 </div>
 
+<!-- TAB 9: Raw Data -->
+<div id="raw-data" class="page">
+  <div class="sub-tab-bar">
+    <button class="active" onclick="subNav('raw','ah')">Additional Hours</button>
+    <button onclick="subNav('raw','cons')">Consecutive Days</button>
+    <button onclick="subNav('raw','rbw')">Rest Between Workdays</button>
+  </div>
+
+  <!-- Sub-tab A: AH Raw -->
+  <div id="raw-ah" class="sub-page active">
+    <div id="raw-ah-loader" style="display:none;padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading employee data…</div>
+    <div class="fr" id="raw-ah-filt-bar" style="display:none">
+      <label>Tower</label>
+      <select id="raw-ah-flt-tower"><option value="">All Towers</option></select>
+      <label>Project</label>
+      <div class="msel" id="msel-raw-ah-proj">
+        <div class="msel-btn" id="msel-raw-ah-proj-btn">All Projects</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-raw-ah-proj-list"></div>
+        </div>
+      </div>
+      <label>Manager</label>
+      <div class="msel" id="msel-raw-ah-mgr">
+        <div class="msel-btn" id="msel-raw-ah-mgr-btn">All Managers</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-raw-ah-mgr-list"></div>
+        </div>
+      </div>
+      <label>Month</label>
+      <select id="raw-ah-flt-mon"><option value="">All Months</option></select>
+      <label>Employee</label>
+      <input id="raw-ah-flt-name" type="text" placeholder="Search name…" oninput="renderRawAH()">
+    </div>
+    <div class="rc" id="raw-ah-rc" style="margin-bottom:8px"></div>
+    <div class="ts" style="max-height:520px"><table id="tbl-raw-ah">
+      <thead><tr>
+        <th>Employee</th><th>Manager</th><th>Project</th><th>Tower</th><th>Month</th>
+        <th id="raw-ah-th-total" onclick="toggleRawAHSort('total')" style="cursor:pointer;user-select:none">Total ▼</th>
+        <th id="raw-ah-th-leq15" onclick="toggleRawAHSort('leq15')" style="cursor:pointer;user-select:none">≤15min</th>
+        <th id="raw-ah-th-gt15" onclick="toggleRawAHSort('gt15')" style="cursor:pointer;user-select:none">&gt;15min</th>
+        <th id="raw-ah-th-excessive" onclick="toggleRawAHSort('excessive')" style="cursor:pointer;user-select:none">Excessive</th>
+        <th id="raw-ah-th-weekendViol" onclick="toggleRawAHSort('weekendViol')" style="cursor:pointer;user-select:none">Wknd+Hol</th>
+        <th>Category</th>
+      </tr></thead>
+      <tbody id="tbl-raw-ah-body"></tbody>
+    </table></div>
+  </div>
+
+  <!-- Sub-tab B: CONS Raw -->
+  <div id="raw-cons" class="sub-page">
+    <div class="fr" id="raw-cons-filt-bar">
+      <label>Tower</label>
+      <select id="raw-cons-flt-tower"><option value="">All Towers</option></select>
+      <label>Project</label>
+      <div class="msel" id="msel-raw-cons-proj">
+        <div class="msel-btn" id="msel-raw-cons-proj-btn">All Projects</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-raw-cons-proj-list"></div>
+        </div>
+      </div>
+      <label>Manager</label>
+      <div class="msel" id="msel-raw-cons-mgr">
+        <div class="msel-btn" id="msel-raw-cons-mgr-btn">All Managers</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-raw-cons-mgr-list"></div>
+        </div>
+      </div>
+      <label>Month</label>
+      <select id="raw-cons-flt-mon"><option value="">All Months</option></select>
+      <label>Employee</label>
+      <input id="raw-cons-flt-name" type="text" placeholder="Search name…" oninput="renderRawCons()">
+    </div>
+    <div class="rc" id="raw-cons-rc" style="margin-bottom:8px"></div>
+    <div class="ts" style="max-height:520px"><table id="tbl-raw-cons">
+      <thead><tr>
+        <th>Employee</th><th>Manager</th><th>Project</th><th>Tower</th><th>Month</th>
+        <th id="raw-cons-th-total" onclick="toggleRawConsSort('total')" style="cursor:pointer;user-select:none">Occurrences ▼</th>
+        <th id="raw-cons-th-unique" onclick="toggleRawConsSort('unique')" style="cursor:pointer;user-select:none">Unique</th>
+      </tr></thead>
+      <tbody id="tbl-raw-cons-body"></tbody>
+    </table></div>
+  </div>
+
+  <!-- Sub-tab C: RBW Raw -->
+  <div id="raw-rbw" class="sub-page">
+    <div class="fr" id="raw-rbw-filt-bar">
+      <label>Tower</label>
+      <select id="raw-rbw-flt-tower"><option value="">All Towers</option></select>
+      <label>Project</label>
+      <div class="msel" id="msel-raw-rbw-proj">
+        <div class="msel-btn" id="msel-raw-rbw-proj-btn">All Projects</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-raw-rbw-proj-list"></div>
+        </div>
+      </div>
+      <label>Manager</label>
+      <div class="msel" id="msel-raw-rbw-mgr">
+        <div class="msel-btn" id="msel-raw-rbw-mgr-btn">All Managers</div>
+        <div class="msel-panel">
+          <input class="msel-search" type="text" placeholder="Search…" oninput="msSearch(this)">
+          <div class="msel-actions"><button onclick="msAll(this)">All</button><button onclick="msNone(this)">None</button></div>
+          <div class="msel-list" id="msel-raw-rbw-mgr-list"></div>
+        </div>
+      </div>
+      <label>Month</label>
+      <select id="raw-rbw-flt-mon"><option value="">All Months</option></select>
+      <label>Employee</label>
+      <input id="raw-rbw-flt-name" type="text" placeholder="Search name…" oninput="renderRawRbw()">
+    </div>
+    <div class="rc" id="raw-rbw-rc" style="margin-bottom:8px"></div>
+    <div class="ts" style="max-height:520px"><table id="tbl-raw-rbw">
+      <thead><tr>
+        <th>Employee</th><th>Manager</th><th>Project</th><th>Tower</th><th>Month</th>
+        <th id="raw-rbw-th-total" onclick="toggleRawRbwSort('total')" style="cursor:pointer;user-select:none">Occurrences ▼</th>
+        <th id="raw-rbw-th-unique" onclick="toggleRawRbwSort('unique')" style="cursor:pointer;user-select:none">Unique</th>
+      </tr></thead>
+      <tbody id="tbl-raw-rbw-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
 <!-- TAB 8: Ask AI -->
 <div id="ai-ask" class="page">
   <div class="ai-shell">
@@ -878,7 +1010,7 @@ const SVG={
 
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 const _init={};
-const TAB_IDS=['executive','additional','ah-analysis','consecutive','rest','offenders','projects'];
+const TAB_IDS=['executive','additional','ah-analysis','consecutive','rest','offenders','projects','raw-data'];
 function nav(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -890,6 +1022,7 @@ function subNav(tab,sub){
   let containerId;
   if(tab==='cons') containerId='consecutive';
   else if(tab==='rest') containerId='rest';
+  else if(tab==='raw') containerId='raw-data';
   else containerId=`${tab}-analysis`;
   const bar=document.querySelectorAll(`#${containerId} .sub-tab-bar button`);
   bar.forEach(b=>b.classList.remove('active'));
@@ -897,7 +1030,7 @@ function subNav(tab,sub){
   const subEl=document.getElementById(`${tab}-${sub}`);
   if(subEl) subEl.classList.add('active');
   // find clicked button — cons/rest have 3 tabs (overview=0,cases=1,matrix=2); ah has (filtered=0,matrix=1,split=2)
-  const subMap={filtered:0,split:2,overview:0,cases:1};
+  const subMap={filtered:0,split:2,overview:0,cases:1,ah:0,cons:1,rbw:2};
   let btnIdx = subMap[sub];
   if(sub==='matrix') btnIdx = (tab==='ah') ? 1 : 2;
   if(bar[btnIdx!=null?btnIdx:0]) bar[btnIdx!=null?btnIdx:0].classList.add('active');
@@ -913,6 +1046,7 @@ function buildPage(id){
     case 'rest': _init['rest-overview']=true; buildRest(); break;
     case 'offenders': buildOffenders(); break;
     case 'projects': buildProjects(); break;
+    case 'raw-data': _init['raw-ah']=true; buildRawData(); break;
   }
 }
 function buildSubPage(tab,sub){
@@ -930,6 +1064,11 @@ function buildSubPage(tab,sub){
     case 'overview': buildRest(); break;
     case 'cases': buildRbwCases(); break;
     case 'matrix': buildRbwMatrix(); break;
+  }
+  if(tab==='raw') switch(sub){
+    case 'ah':   buildRawAH(); break;
+    case 'cons': buildRawCons(); break;
+    case 'rbw':  buildRawRbw(); break;
   }
 }
 
@@ -998,6 +1137,14 @@ function loadEmpChunksForExec(){
       if(document.getElementById('executive').classList.contains('active')){
         renderExecutive();
       }
+      // Finalise Raw Data AH sub-tab if it is visible
+      const rawAhPage = document.getElementById('raw-ah');
+      const rawAhFiltBar = document.getElementById('raw-ah-filt-bar');
+      const rawAhLoader  = document.getElementById('raw-ah-loader');
+      if(rawAhFiltBar) rawAhFiltBar.style.display = 'flex';
+      if(rawAhLoader)  rawAhLoader.style.display  = 'none';
+      populateRawAHDropdowns();
+      if(rawAhPage && rawAhPage.classList.contains('active')) renderRawAH();
       return;
     }
     const s = document.createElement('script');
@@ -1578,6 +1725,14 @@ function loadEmpChunks(){
       renderFiltered();
       // also populate matrix dropdowns
       populateMatrixDropdowns();
+      // Finalise Raw Data AH sub-tab if it is visible
+      const rawAhFiltBar2 = document.getElementById('raw-ah-filt-bar');
+      const rawAhLoader2  = document.getElementById('raw-ah-loader');
+      if(rawAhFiltBar2) rawAhFiltBar2.style.display = 'flex';
+      if(rawAhLoader2)  rawAhLoader2.style.display  = 'none';
+      populateRawAHDropdowns();
+      const rawAhPage2 = document.getElementById('raw-ah');
+      if(rawAhPage2 && rawAhPage2.classList.contains('active')) renderRawAH();
       return;
     }
     const s=document.createElement('script');
@@ -2430,6 +2585,355 @@ function buildRest(){
   html+='</tbody>';
   tbl.innerHTML=html;
 }
+
+
+// ─── TAB 9: RAW DATA ─────────────────────────────────────────────────────────
+let _rawAHDropdownsPopulated = false;
+let _rawConsDropdownsPopulated = false;
+let _rawRbwDropdownsPopulated = false;
+let rawAHSortCol = 'total';
+let rawAHSortAsc = false;
+let rawConsSortCol = 'total';
+let rawConsSortAsc = false;
+let rawRbwSortCol = 'total';
+let rawRbwSortAsc = false;
+
+function buildRawData(){
+  buildRawAH();
+}
+
+// ── AH sub-tab ───────────────────────────────────────────────────────────────
+function buildRawAH(){
+  if(EMP_MONTH){
+    document.getElementById('raw-ah-loader').style.display = 'none';
+    document.getElementById('raw-ah-filt-bar').style.display = 'flex';
+    populateRawAHDropdowns();
+    renderRawAH();
+  } else {
+    // trigger load
+    document.getElementById('raw-ah-loader').style.display = 'block';
+    document.getElementById('raw-ah-filt-bar').style.display = 'none';
+    if(!_empLoading){
+      loadEmpChunksForRaw();
+    }
+  }
+}
+
+function loadEmpChunksForRaw(){
+  if(_empLoading || EMP_MONTH) return;
+  _empLoading = true;
+  let loaded = 0;
+  const chunks = ['_empChunk0','_empChunk1','_empChunk2','_empChunk3','_empChunk4'];
+  function loadNext(i){
+    if(i>=5){
+      EMP_MONTH = [];
+      chunks.forEach(k=>{ if(window[k]) EMP_MONTH = EMP_MONTH.concat(window[k]); });
+      _empLoading = false;
+      // also satisfy other tabs that depend on EMP_MONTH
+      populateFilterDropdowns();
+      populateMatrixDropdowns();
+      const filtBar  = document.getElementById('filt-bar');
+      const loader   = document.getElementById('emp-loader');
+      if(filtBar) filtBar.style.display = 'flex';
+      if(loader)  loader.style.display  = 'none';
+      // Update Raw Data AH sub-tab
+      const rawLoader  = document.getElementById('raw-ah-loader');
+      const rawFiltBar = document.getElementById('raw-ah-filt-bar');
+      if(rawLoader)  rawLoader.style.display  = 'none';
+      if(rawFiltBar) rawFiltBar.style.display = 'flex';
+      populateRawAHDropdowns();
+      renderRawAH();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = 'brazil-labor-emp-' + i + '.js';
+    s.onload  = ()=>{ loaded++; loadNext(i+1); };
+    s.onerror = ()=>{ loaded++; loadNext(i+1); };
+    document.head.appendChild(s);
+  }
+  loadNext(0);
+}
+
+function populateRawAHDropdowns(){
+  if(!EMP_MONTH || _rawAHDropdownsPopulated) return;
+  _rawAHDropdownsPopulated = true;
+  const towers = [...new Set(EMP_MONTH.map(r=>r.tower).filter(Boolean))].sort();
+  const tSel = document.getElementById('raw-ah-flt-tower');
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o); });
+  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById('raw-ah-flt-mon').appendChild(o); });
+  refreshRawAHProjDropdown();
+  tSel.onchange = ()=>{ refreshRawAHProjDropdown(); renderRawAH(); };
+  document.getElementById('raw-ah-flt-mon').onchange = renderRawAH;
+}
+
+function refreshRawAHProjDropdown(){
+  if(!EMP_MONTH) return;
+  const tower = document.getElementById('raw-ah-flt-tower').value;
+  let subset = tower ? EMP_MONTH.filter(r=>r.tower===tower) : EMP_MONTH;
+  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
+  msPopulate('msel-raw-ah-proj-list','msel-raw-ah-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshRawAHMgrDropdown(); renderRawAH(); },
+    'All Projects');
+  refreshRawAHMgrDropdown();
+}
+
+function refreshRawAHMgrDropdown(){
+  if(!EMP_MONTH) return;
+  const tower = document.getElementById('raw-ah-flt-tower').value;
+  const projs = msGetValues('msel-raw-ah-proj-list');
+  let subset = EMP_MONTH;
+  if(tower) subset = subset.filter(r=>r.tower===tower);
+  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
+  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  msPopulate('msel-raw-ah-mgr-list','msel-raw-ah-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderRawAH,
+    'All Managers');
+}
+
+function toggleRawAHSort(col){
+  if(rawAHSortCol===col){ rawAHSortAsc=!rawAHSortAsc; }
+  else { rawAHSortCol=col; rawAHSortAsc=false; }
+  renderRawAH();
+}
+
+function renderRawAH(){
+  if(!EMP_MONTH) return;
+  const tower = document.getElementById('raw-ah-flt-tower').value;
+  const projs = msGetValues('msel-raw-ah-proj-list');
+  const mgrs  = msGetValues('msel-raw-ah-mgr-list');
+  const mon   = document.getElementById('raw-ah-flt-mon').value;
+  const name  = (document.getElementById('raw-ah-flt-name').value||'').toLowerCase();
+  let rows = EMP_MONTH;
+  if(tower) rows = rows.filter(r=>r.tower===tower);
+  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
+  if(mon)  rows = rows.filter(r=>r.my===mon);
+  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  const sortCols = ['total','leq15','gt15','excessive','weekendViol'];
+  if(sortCols.includes(rawAHSortCol)){
+    rows = [...rows].sort((a,b)=>{
+      const va=a[rawAHSortCol]||0, vb=b[rawAHSortCol]||0;
+      if(va!==vb) return rawAHSortAsc?va-vb:vb-va;
+      return (a.name||'').localeCompare(b.name||'');
+    });
+  }
+
+  const labels = {total:'Total',leq15:'≤15min',gt15:'>15min',excessive:'Excessive',weekendViol:'Wknd+Hol'};
+  sortCols.forEach(col=>{
+    const th = document.getElementById('raw-ah-th-'+col);
+    if(!th) return;
+    th.textContent = labels[col] + (rawAHSortCol===col ? (rawAHSortAsc?' ▲':' ▼') : '');
+  });
+
+  document.getElementById('raw-ah-rc').textContent = `${rows.length.toLocaleString()} records`;
+  const tbody = document.getElementById('tbl-raw-ah-body');
+  const show = rows.slice(0, 500);
+  tbody.innerHTML = show.map(r=>{
+    const mLabel = M[MY.indexOf(r.my)]||r.my;
+    return `<tr>
+      <td>${r.name}</td>
+      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
+      <td>${r.project}</td>
+      <td>${r.tower||'—'}</td>
+      <td>${mLabel}</td>
+      <td>${r.total}</td><td>${r.leq15||0}</td><td>${r.gt15||0}</td><td>${r.excessive||0}</td><td>${r.weekendViol||0}</td>
+      <td>${ahCatBadge(r.total)}</td>
+    </tr>`;
+  }).join('');
+  if(rows.length>500) tbody.innerHTML+=`<tr><td colspan="11" style="color:#57606a;text-align:center">…and ${(rows.length-500).toLocaleString()} more rows. Use filters to narrow results.</td></tr>`;
+}
+
+// ── CONS sub-tab ──────────────────────────────────────────────────────────────
+function buildRawCons(){
+  if(!CONS_EMP || !CONS_EMP.length) return;
+  populateRawConsDropdowns();
+  renderRawCons();
+}
+
+function populateRawConsDropdowns(){
+  if(_rawConsDropdownsPopulated) return;
+  _rawConsDropdownsPopulated = true;
+  const towers = [...new Set(CONS_EMP.map(r=>r.tower).filter(Boolean))].sort();
+  const tSel = document.getElementById('raw-cons-flt-tower');
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o); });
+  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById('raw-cons-flt-mon').appendChild(o); });
+  refreshRawConsProjDropdown();
+  tSel.onchange = ()=>{ refreshRawConsProjDropdown(); renderRawCons(); };
+  document.getElementById('raw-cons-flt-mon').onchange = renderRawCons;
+}
+
+function refreshRawConsProjDropdown(){
+  const tower = document.getElementById('raw-cons-flt-tower').value;
+  let subset = tower ? CONS_EMP.filter(r=>r.tower===tower) : CONS_EMP;
+  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
+  msPopulate('msel-raw-cons-proj-list','msel-raw-cons-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshRawConsMgrDropdown(); renderRawCons(); },
+    'All Projects');
+  refreshRawConsMgrDropdown();
+}
+
+function refreshRawConsMgrDropdown(){
+  const tower = document.getElementById('raw-cons-flt-tower').value;
+  const projs = msGetValues('msel-raw-cons-proj-list');
+  let subset = CONS_EMP;
+  if(tower) subset = subset.filter(r=>r.tower===tower);
+  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
+  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  msPopulate('msel-raw-cons-mgr-list','msel-raw-cons-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderRawCons,
+    'All Managers');
+}
+
+function toggleRawConsSort(col){
+  if(rawConsSortCol===col){ rawConsSortAsc=!rawConsSortAsc; }
+  else { rawConsSortCol=col; rawConsSortAsc=false; }
+  renderRawCons();
+}
+
+function renderRawCons(){
+  if(!CONS_EMP) return;
+  const tower = document.getElementById('raw-cons-flt-tower').value;
+  const projs = msGetValues('msel-raw-cons-proj-list');
+  const mgrs  = msGetValues('msel-raw-cons-mgr-list');
+  const mon   = document.getElementById('raw-cons-flt-mon').value;
+  const name  = (document.getElementById('raw-cons-flt-name').value||'').toLowerCase();
+  let rows = CONS_EMP;
+  if(tower) rows = rows.filter(r=>r.tower===tower);
+  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
+  if(mon)  rows = rows.filter(r=>r.my===mon);
+  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  rows = [...rows].sort((a,b)=>{
+    const va=a[rawConsSortCol]||0, vb=b[rawConsSortCol]||0;
+    if(va!==vb) return rawConsSortAsc?va-vb:vb-va;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  ['total','unique'].forEach(col=>{
+    const th = document.getElementById('raw-cons-th-'+col);
+    if(!th) return;
+    const lbl = col==='total'?'Occurrences':'Unique';
+    th.textContent = lbl + (rawConsSortCol===col ? (rawConsSortAsc?' ▲':' ▼') : '');
+  });
+
+  document.getElementById('raw-cons-rc').textContent = `${rows.length.toLocaleString()} records`;
+  const tbody = document.getElementById('tbl-raw-cons-body');
+  const show = rows.slice(0, 500);
+  tbody.innerHTML = show.map(r=>{
+    const mLabel = M[MY.indexOf(r.my)]||r.my;
+    return `<tr>
+      <td>${r.name}</td>
+      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
+      <td>${r.project}</td>
+      <td>${r.tower||'—'}</td>
+      <td>${mLabel}</td>
+      <td>${r.total}</td>
+      <td>${r.unique>0?`<span class="bc yellow">${r.unique}</span>`:0}</td>
+    </tr>`;
+  }).join('');
+  if(rows.length>500) tbody.innerHTML+=`<tr><td colspan="7" style="color:#57606a;text-align:center">…and ${(rows.length-500).toLocaleString()} more rows. Use filters to narrow results.</td></tr>`;
+}
+
+// ── RBW sub-tab ───────────────────────────────────────────────────────────────
+function buildRawRbw(){
+  if(!RBW_EMP || !RBW_EMP.length) return;
+  populateRawRbwDropdowns();
+  renderRawRbw();
+}
+
+function populateRawRbwDropdowns(){
+  if(_rawRbwDropdownsPopulated) return;
+  _rawRbwDropdownsPopulated = true;
+  const towers = [...new Set(RBW_EMP.map(r=>r.tower).filter(Boolean))].sort();
+  const tSel = document.getElementById('raw-rbw-flt-tower');
+  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o); });
+  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById('raw-rbw-flt-mon').appendChild(o); });
+  refreshRawRbwProjDropdown();
+  tSel.onchange = ()=>{ refreshRawRbwProjDropdown(); renderRawRbw(); };
+  document.getElementById('raw-rbw-flt-mon').onchange = renderRawRbw;
+}
+
+function refreshRawRbwProjDropdown(){
+  const tower = document.getElementById('raw-rbw-flt-tower').value;
+  let subset = tower ? RBW_EMP.filter(r=>r.tower===tower) : RBW_EMP;
+  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
+  msPopulate('msel-raw-rbw-proj-list','msel-raw-rbw-proj-btn',
+    projs.map(p=>({value:p,label:p})),
+    ()=>{ refreshRawRbwMgrDropdown(); renderRawRbw(); },
+    'All Projects');
+  refreshRawRbwMgrDropdown();
+}
+
+function refreshRawRbwMgrDropdown(){
+  const tower = document.getElementById('raw-rbw-flt-tower').value;
+  const projs = msGetValues('msel-raw-rbw-proj-list');
+  let subset = RBW_EMP;
+  if(tower) subset = subset.filter(r=>r.tower===tower);
+  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
+  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
+  msPopulate('msel-raw-rbw-mgr-list','msel-raw-rbw-mgr-btn',
+    mgrs.map(m=>({value:m,label:m})),
+    renderRawRbw,
+    'All Managers');
+}
+
+function toggleRawRbwSort(col){
+  if(rawRbwSortCol===col){ rawRbwSortAsc=!rawRbwSortAsc; }
+  else { rawRbwSortCol=col; rawRbwSortAsc=false; }
+  renderRawRbw();
+}
+
+function renderRawRbw(){
+  if(!RBW_EMP) return;
+  const tower = document.getElementById('raw-rbw-flt-tower').value;
+  const projs = msGetValues('msel-raw-rbw-proj-list');
+  const mgrs  = msGetValues('msel-raw-rbw-mgr-list');
+  const mon   = document.getElementById('raw-rbw-flt-mon').value;
+  const name  = (document.getElementById('raw-rbw-flt-name').value||'').toLowerCase();
+  let rows = RBW_EMP;
+  if(tower) rows = rows.filter(r=>r.tower===tower);
+  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
+  if(mon)  rows = rows.filter(r=>r.my===mon);
+  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+
+  rows = [...rows].sort((a,b)=>{
+    const va=a[rawRbwSortCol]||0, vb=b[rawRbwSortCol]||0;
+    if(va!==vb) return rawRbwSortAsc?va-vb:vb-va;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  ['total','unique'].forEach(col=>{
+    const th = document.getElementById('raw-rbw-th-'+col);
+    if(!th) return;
+    const lbl = col==='total'?'Occurrences':'Unique';
+    th.textContent = lbl + (rawRbwSortCol===col ? (rawRbwSortAsc?' ▲':' ▼') : '');
+  });
+
+  document.getElementById('raw-rbw-rc').textContent = `${rows.length.toLocaleString()} records`;
+  const tbody = document.getElementById('tbl-raw-rbw-body');
+  const show = rows.slice(0, 500);
+  tbody.innerHTML = show.map(r=>{
+    const mLabel = M[MY.indexOf(r.my)]||r.my;
+    return `<tr>
+      <td>${r.name}</td>
+      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
+      <td>${r.project}</td>
+      <td>${r.tower||'—'}</td>
+      <td>${mLabel}</td>
+      <td>${r.total}</td>
+      <td>${r.unique>0?`<span class="bc yellow">${r.unique}</span>`:0}</td>
+    </tr>`;
+  }).join('');
+  if(rows.length>500) tbody.innerHTML+=`<tr><td colspan="7" style="color:#57606a;text-align:center">…and ${(rows.length-500).toLocaleString()} more rows. Use filters to narrow results.</td></tr>`;
+}
+
 
 // ─── TAB 6: TOP OFFENDERS ────────────────────────────────────────────────────
 function buildOffenders(){
