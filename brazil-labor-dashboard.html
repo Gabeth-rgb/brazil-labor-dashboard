@@ -532,12 +532,12 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
     <button onclick="subNav('raw','rbw')">Rest Between Workdays</button>
   </div>
 
-  <!-- Sub-tab A: AH Raw -->
+  <!-- Sub-tab A: AH Raw — row-per-day full dump -->
   <div id="raw-ah" class="sub-page active">
-    <div id="raw-ah-loader" style="display:none;padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading employee data…</div>
+    <div id="raw-ah-loader" style="padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading raw data…</div>
     <div class="fr" id="raw-ah-filt-bar" style="display:none">
       <label>Tower</label>
-      <select id="raw-ah-flt-tower"><option value="">All Towers</option></select>
+      <select id="raw-ah-flt-tower" onchange="refreshRawAHProjDropdown();renderRawAH()"><option value="">All Towers</option></select>
       <label>Project</label>
       <div class="msel" id="msel-raw-ah-proj">
         <div class="msel-btn" id="msel-raw-ah-proj-btn">All Projects</div>
@@ -557,30 +557,32 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
         </div>
       </div>
       <label>Month</label>
-      <select id="raw-ah-flt-mon"><option value="">All Months</option></select>
+      <select id="raw-ah-flt-mon" onchange="renderRawAH()"><option value="">All Months</option></select>
       <label>Employee</label>
       <input id="raw-ah-flt-name" type="text" placeholder="Search name…" oninput="renderRawAH()">
     </div>
     <div class="rc" id="raw-ah-rc" style="margin-bottom:8px"></div>
-    <div class="ts" style="max-height:520px"><table id="tbl-raw-ah">
-      <thead><tr>
-        <th>Employee</th><th>Manager</th><th>Project</th><th>Tower</th><th>Month</th>
-        <th id="raw-ah-th-total" onclick="toggleRawAHSort('total')" style="cursor:pointer;user-select:none">Total ▼</th>
-        <th id="raw-ah-th-leq15" onclick="toggleRawAHSort('leq15')" style="cursor:pointer;user-select:none">≤15min</th>
-        <th id="raw-ah-th-gt15" onclick="toggleRawAHSort('gt15')" style="cursor:pointer;user-select:none">&gt;15min</th>
-        <th id="raw-ah-th-excessive" onclick="toggleRawAHSort('excessive')" style="cursor:pointer;user-select:none">Excessive</th>
-        <th id="raw-ah-th-weekendViol" onclick="toggleRawAHSort('weekendViol')" style="cursor:pointer;user-select:none">Wknd+Hol</th>
-        <th>Category</th>
-      </tr></thead>
-      <tbody id="tbl-raw-ah-body"></tbody>
-    </table></div>
+    <div style="overflow:auto;max-height:560px;border:1px solid #e5e7eb;border-radius:6px">
+      <table class="mt" id="tbl-raw-ah">
+        <thead><tr>
+          <th>Employee</th><th>Serial</th><th>Manager</th><th>2nd Line Mgr</th><th>Project</th><th>Tower</th>
+          <th>Date</th><th>Weekday</th><th>Time Registers</th>
+          <th>Expected</th><th>Regular</th><th>Additional</th><th>Weekly Rest</th><th>Holiday</th>
+          <th>Worked</th><th>Accredited</th><th>Stand-by</th><th>Total</th>
+          <th>Max Additional</th><th>Excess Additional</th><th>≤15min</th><th>Wknd&amp;Holidays</th>
+          <th>Hrs Volume Range</th><th>Cost Center</th><th>BU</th><th>Month/Year</th>
+        </tr></thead>
+        <tbody id="tbl-raw-ah-body"></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Sub-tab B: CONS Raw -->
+  <!-- Sub-tab B: CONS Raw — row-per-day full dump -->
   <div id="raw-cons" class="sub-page">
-    <div class="fr" id="raw-cons-filt-bar">
+    <div id="raw-cons-loader" style="padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading raw data…</div>
+    <div class="fr" id="raw-cons-filt-bar" style="display:none">
       <label>Tower</label>
-      <select id="raw-cons-flt-tower"><option value="">All Towers</option></select>
+      <select id="raw-cons-flt-tower" onchange="refreshRawConsProjDropdown();renderRawCons()"><option value="">All Towers</option></select>
       <label>Project</label>
       <div class="msel" id="msel-raw-cons-proj">
         <div class="msel-btn" id="msel-raw-cons-proj-btn">All Projects</div>
@@ -600,26 +602,32 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
         </div>
       </div>
       <label>Month</label>
-      <select id="raw-cons-flt-mon"><option value="">All Months</option></select>
+      <select id="raw-cons-flt-mon" onchange="renderRawCons()"><option value="">All Months</option></select>
       <label>Employee</label>
       <input id="raw-cons-flt-name" type="text" placeholder="Search name…" oninput="renderRawCons()">
     </div>
     <div class="rc" id="raw-cons-rc" style="margin-bottom:8px"></div>
-    <div class="ts" style="max-height:520px"><table id="tbl-raw-cons">
-      <thead><tr>
-        <th>Employee</th><th>Manager</th><th>Project</th><th>Tower</th><th>Month</th>
-        <th id="raw-cons-th-total" onclick="toggleRawConsSort('total')" style="cursor:pointer;user-select:none">Occurrences ▼</th>
-        <th id="raw-cons-th-unique" onclick="toggleRawConsSort('unique')" style="cursor:pointer;user-select:none">Unique</th>
-      </tr></thead>
-      <tbody id="tbl-raw-cons-body"></tbody>
-    </table></div>
+    <div style="overflow:auto;max-height:560px;border:1px solid #e5e7eb;border-radius:6px">
+      <table class="mt" id="tbl-raw-cons">
+        <thead><tr>
+          <th>Employee</th><th>Serial</th><th>Manager</th><th>2nd Line Mgr</th><th>Project</th><th>Tower</th>
+          <th>Date</th><th>Weekday</th><th>Time Registers</th>
+          <th>Expected</th><th>Regular</th><th>Additional</th><th>Weekly Rest</th><th>Holiday</th>
+          <th>Worked</th><th>Accredited</th><th>Stand-by</th><th>Total</th>
+          <th>Work Days</th><th>Max Work Days</th><th>Excess Days</th>
+          <th>Cost Center</th><th>BU</th><th>Unique</th><th>Month/Year</th>
+        </tr></thead>
+        <tbody id="tbl-raw-cons-body"></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Sub-tab C: RBW Raw -->
+  <!-- Sub-tab C: RBW Raw — row-per-day full dump -->
   <div id="raw-rbw" class="sub-page">
-    <div class="fr" id="raw-rbw-filt-bar">
+    <div id="raw-rbw-loader" style="padding:14px 0;color:#57606a;font-size:13px">&#9203; Loading raw data…</div>
+    <div class="fr" id="raw-rbw-filt-bar" style="display:none">
       <label>Tower</label>
-      <select id="raw-rbw-flt-tower"><option value="">All Towers</option></select>
+      <select id="raw-rbw-flt-tower" onchange="refreshRawRbwProjDropdown();renderRawRbw()"><option value="">All Towers</option></select>
       <label>Project</label>
       <div class="msel" id="msel-raw-rbw-proj">
         <div class="msel-btn" id="msel-raw-rbw-proj-btn">All Projects</div>
@@ -639,19 +647,24 @@ footer{text-align:center;padding:16px;color:#8a9099;font-size:11px;border-top:1p
         </div>
       </div>
       <label>Month</label>
-      <select id="raw-rbw-flt-mon"><option value="">All Months</option></select>
+      <select id="raw-rbw-flt-mon" onchange="renderRawRbw()"><option value="">All Months</option></select>
       <label>Employee</label>
       <input id="raw-rbw-flt-name" type="text" placeholder="Search name…" oninput="renderRawRbw()">
     </div>
     <div class="rc" id="raw-rbw-rc" style="margin-bottom:8px"></div>
-    <div class="ts" style="max-height:520px"><table id="tbl-raw-rbw">
-      <thead><tr>
-        <th>Employee</th><th>Manager</th><th>Project</th><th>Tower</th><th>Month</th>
-        <th id="raw-rbw-th-total" onclick="toggleRawRbwSort('total')" style="cursor:pointer;user-select:none">Occurrences ▼</th>
-        <th id="raw-rbw-th-unique" onclick="toggleRawRbwSort('unique')" style="cursor:pointer;user-select:none">Unique</th>
-      </tr></thead>
-      <tbody id="tbl-raw-rbw-body"></tbody>
-    </table></div>
+    <div style="overflow:auto;max-height:560px;border:1px solid #e5e7eb;border-radius:6px">
+      <table class="mt" id="tbl-raw-rbw">
+        <thead><tr>
+          <th>Employee</th><th>Serial</th><th>Manager</th><th>2nd Line Mgr</th><th>Project</th><th>Tower</th>
+          <th>Date</th><th>Weekday</th><th>Time Registers</th>
+          <th>Expected</th><th>Regular</th><th>Additional</th><th>Weekly Rest</th><th>Holiday</th>
+          <th>Worked</th><th>Accredited</th><th>Stand-by</th><th>Total</th>
+          <th>1st Register</th><th>Last Prev Day</th><th>Rest</th><th>Min Rest</th><th>Missing Rest</th>
+          <th>Range</th><th>Cost Center</th><th>BU</th><th>Unique</th><th>Month/Year</th>
+        </tr></thead>
+        <tbody id="tbl-raw-rbw-body"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -1137,14 +1150,6 @@ function loadEmpChunksForExec(){
       if(document.getElementById('executive').classList.contains('active')){
         renderExecutive();
       }
-      // Finalise Raw Data AH sub-tab if it is visible
-      const rawAhPage = document.getElementById('raw-ah');
-      const rawAhFiltBar = document.getElementById('raw-ah-filt-bar');
-      const rawAhLoader  = document.getElementById('raw-ah-loader');
-      if(rawAhFiltBar) rawAhFiltBar.style.display = 'flex';
-      if(rawAhLoader)  rawAhLoader.style.display  = 'none';
-      populateRawAHDropdowns();
-      if(rawAhPage && rawAhPage.classList.contains('active')) renderRawAH();
       return;
     }
     const s = document.createElement('script');
@@ -1725,14 +1730,6 @@ function loadEmpChunks(){
       renderFiltered();
       // also populate matrix dropdowns
       populateMatrixDropdowns();
-      // Finalise Raw Data AH sub-tab if it is visible
-      const rawAhFiltBar2 = document.getElementById('raw-ah-filt-bar');
-      const rawAhLoader2  = document.getElementById('raw-ah-loader');
-      if(rawAhFiltBar2) rawAhFiltBar2.style.display = 'flex';
-      if(rawAhLoader2)  rawAhLoader2.style.display  = 'none';
-      populateRawAHDropdowns();
-      const rawAhPage2 = document.getElementById('raw-ah');
-      if(rawAhPage2 && rawAhPage2.classList.contains('active')) renderRawAH();
       return;
     }
     const s=document.createElement('script');
@@ -2588,350 +2585,226 @@ function buildRest(){
 
 
 // ─── TAB 9: RAW DATA ─────────────────────────────────────────────────────────
-let _rawAHDropdownsPopulated = false;
-let _rawConsDropdownsPopulated = false;
-let _rawRbwDropdownsPopulated = false;
-let rawAHSortCol = 'total';
-let rawAHSortAsc = false;
-let rawConsSortCol = 'total';
-let rawConsSortAsc = false;
-let rawRbwSortCol = 'total';
-let rawRbwSortAsc = false;
+// RAW_AH, RAW_CONS, RAW_RBW are loaded lazily from brazil-labor-raw-*.js files
+// Each contains one row per day per employee (the actual Excel dump).
+let _rawAHLoaded = false, _rawConsLoaded = false, _rawRbwLoaded = false;
+let _rawAHDropdownsPopulated = false, _rawConsDropdownsPopulated = false, _rawRbwDropdownsPopulated = false;
 
-function buildRawData(){
-  buildRawAH();
+function h(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function buildRawData(){ buildRawAH(); }
+
+// ── helpers shared by all 3 sections ─────────────────────────────────────────
+function loadRawScript(src, onDone){
+  const s = document.createElement('script');
+  s.src = src;
+  s.onload  = onDone;
+  s.onerror = onDone; // proceed even if missing
+  document.head.appendChild(s);
+}
+function rawFilterRows(rows, towerId, projListId, mgrListId, monId, nameId){
+  const tower = document.getElementById(towerId).value;
+  const projs = msGetValues(projListId);
+  const mgrs  = msGetValues(mgrListId);
+  const mon   = document.getElementById(monId).value;
+  const name  = (document.getElementById(nameId).value||'').toLowerCase();
+  if(tower) rows = rows.filter(r=>r.tower===tower);
+  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
+  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
+  if(mon)  rows = rows.filter(r=>r.my===mon);
+  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
+  return rows;
+}
+function rawPopulateDropdowns(data, towerId, projListId, projBtnId, mgrListId, mgrBtnId, monId, onProj, onMgr, onRender){
+  const tSel = document.getElementById(towerId);
+  [...new Set(data.map(r=>r.tower).filter(Boolean))].sort().forEach(t=>{
+    const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o);
+  });
+  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById(monId).appendChild(o); });
+  tSel.onchange = onProj;
+  rawRefreshProj(data, towerId, projListId, projBtnId, mgrListId, mgrBtnId, onMgr, onRender);
+}
+function rawRefreshProj(data, towerId, projListId, projBtnId, mgrListId, mgrBtnId, onMgr, onRender){
+  const tower = document.getElementById(towerId).value;
+  const subset = tower ? data.filter(r=>r.tower===tower) : data;
+  msPopulate(projListId, projBtnId, [...new Set(subset.map(r=>r.project).filter(Boolean))].sort().map(p=>({value:p,label:p})),
+    ()=>{ rawRefreshMgr(data, towerId, projListId, mgrListId, mgrBtnId, onRender); onRender(); }, 'All Projects');
+  rawRefreshMgr(data, towerId, projListId, mgrListId, mgrBtnId, onMgr);
+}
+function rawRefreshMgr(data, towerId, projListId, mgrListId, mgrBtnId, onRender){
+  const tower = document.getElementById(towerId).value;
+  const projs = msGetValues(projListId);
+  let sub = data;
+  if(tower) sub = sub.filter(r=>r.tower===tower);
+  if(projs.length) sub = sub.filter(r=>projs.includes(r.project));
+  msPopulate(mgrListId, mgrBtnId, [...new Set(sub.map(r=>r.mgr).filter(Boolean))].sort().map(m=>({value:m,label:m})),
+    onRender, 'All Managers');
 }
 
-// ── AH sub-tab ───────────────────────────────────────────────────────────────
+// ── AH Raw ────────────────────────────────────────────────────────────────────
 function buildRawAH(){
-  if(EMP_MONTH){
-    document.getElementById('raw-ah-loader').style.display = 'none';
-    document.getElementById('raw-ah-filt-bar').style.display = 'flex';
-    populateRawAHDropdowns();
-    renderRawAH();
-  } else {
-    // trigger load
-    document.getElementById('raw-ah-loader').style.display = 'block';
-    document.getElementById('raw-ah-filt-bar').style.display = 'none';
-    if(!_empLoading){
-      loadEmpChunksForRaw();
-    }
+  if(_rawAHLoaded){ _readyRawAH(); return; }
+  loadRawScript('brazil-labor-raw-ah.js', ()=>{
+    _rawAHLoaded = true;
+    _readyRawAH();
+  });
+}
+function _readyRawAH(){
+  const data = window.RAW_AH;
+  if(!data){ document.getElementById('raw-ah-loader').textContent='⚠️ Raw AH data file not found.'; return; }
+  document.getElementById('raw-ah-loader').style.display = 'none';
+  document.getElementById('raw-ah-filt-bar').style.display = 'flex';
+  if(!_rawAHDropdownsPopulated){
+    _rawAHDropdownsPopulated = true;
+    rawPopulateDropdowns(data,'raw-ah-flt-tower','msel-raw-ah-proj-list','msel-raw-ah-proj-btn',
+      'msel-raw-ah-mgr-list','msel-raw-ah-mgr-btn','raw-ah-flt-mon',
+      ()=>{ refreshRawAHProjDropdown(); renderRawAH(); },
+      renderRawAH, renderRawAH);
   }
-}
-
-function loadEmpChunksForRaw(){
-  if(_empLoading || EMP_MONTH) return;
-  _empLoading = true;
-  let loaded = 0;
-  const chunks = ['_empChunk0','_empChunk1','_empChunk2','_empChunk3','_empChunk4'];
-  function loadNext(i){
-    if(i>=5){
-      EMP_MONTH = [];
-      chunks.forEach(k=>{ if(window[k]) EMP_MONTH = EMP_MONTH.concat(window[k]); });
-      _empLoading = false;
-      // also satisfy other tabs that depend on EMP_MONTH
-      populateFilterDropdowns();
-      populateMatrixDropdowns();
-      const filtBar  = document.getElementById('filt-bar');
-      const loader   = document.getElementById('emp-loader');
-      if(filtBar) filtBar.style.display = 'flex';
-      if(loader)  loader.style.display  = 'none';
-      // Update Raw Data AH sub-tab
-      const rawLoader  = document.getElementById('raw-ah-loader');
-      const rawFiltBar = document.getElementById('raw-ah-filt-bar');
-      if(rawLoader)  rawLoader.style.display  = 'none';
-      if(rawFiltBar) rawFiltBar.style.display = 'flex';
-      populateRawAHDropdowns();
-      renderRawAH();
-      return;
-    }
-    const s = document.createElement('script');
-    s.src = 'brazil-labor-emp-' + i + '.js';
-    s.onload  = ()=>{ loaded++; loadNext(i+1); };
-    s.onerror = ()=>{ loaded++; loadNext(i+1); };
-    document.head.appendChild(s);
-  }
-  loadNext(0);
-}
-
-function populateRawAHDropdowns(){
-  if(!EMP_MONTH || _rawAHDropdownsPopulated) return;
-  _rawAHDropdownsPopulated = true;
-  const towers = [...new Set(EMP_MONTH.map(r=>r.tower).filter(Boolean))].sort();
-  const tSel = document.getElementById('raw-ah-flt-tower');
-  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o); });
-  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById('raw-ah-flt-mon').appendChild(o); });
-  refreshRawAHProjDropdown();
-  tSel.onchange = ()=>{ refreshRawAHProjDropdown(); renderRawAH(); };
-  document.getElementById('raw-ah-flt-mon').onchange = renderRawAH;
-}
-
-function refreshRawAHProjDropdown(){
-  if(!EMP_MONTH) return;
-  const tower = document.getElementById('raw-ah-flt-tower').value;
-  let subset = tower ? EMP_MONTH.filter(r=>r.tower===tower) : EMP_MONTH;
-  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
-  msPopulate('msel-raw-ah-proj-list','msel-raw-ah-proj-btn',
-    projs.map(p=>({value:p,label:p})),
-    ()=>{ refreshRawAHMgrDropdown(); renderRawAH(); },
-    'All Projects');
-  refreshRawAHMgrDropdown();
-}
-
-function refreshRawAHMgrDropdown(){
-  if(!EMP_MONTH) return;
-  const tower = document.getElementById('raw-ah-flt-tower').value;
-  const projs = msGetValues('msel-raw-ah-proj-list');
-  let subset = EMP_MONTH;
-  if(tower) subset = subset.filter(r=>r.tower===tower);
-  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
-  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
-  msPopulate('msel-raw-ah-mgr-list','msel-raw-ah-mgr-btn',
-    mgrs.map(m=>({value:m,label:m})),
-    renderRawAH,
-    'All Managers');
-}
-
-function toggleRawAHSort(col){
-  if(rawAHSortCol===col){ rawAHSortAsc=!rawAHSortAsc; }
-  else { rawAHSortCol=col; rawAHSortAsc=false; }
   renderRawAH();
 }
-
+function refreshRawAHProjDropdown(){
+  if(!window.RAW_AH) return;
+  rawRefreshProj(window.RAW_AH,'raw-ah-flt-tower','msel-raw-ah-proj-list','msel-raw-ah-proj-btn',
+    'msel-raw-ah-mgr-list','msel-raw-ah-mgr-btn',renderRawAH,renderRawAH);
+}
 function renderRawAH(){
-  if(!EMP_MONTH) return;
-  const tower = document.getElementById('raw-ah-flt-tower').value;
-  const projs = msGetValues('msel-raw-ah-proj-list');
-  const mgrs  = msGetValues('msel-raw-ah-mgr-list');
-  const mon   = document.getElementById('raw-ah-flt-mon').value;
-  const name  = (document.getElementById('raw-ah-flt-name').value||'').toLowerCase();
-  let rows = EMP_MONTH;
-  if(tower) rows = rows.filter(r=>r.tower===tower);
-  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
-  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
-  if(mon)  rows = rows.filter(r=>r.my===mon);
-  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
-
-  const sortCols = ['total','leq15','gt15','excessive','weekendViol'];
-  if(sortCols.includes(rawAHSortCol)){
-    rows = [...rows].sort((a,b)=>{
-      const va=a[rawAHSortCol]||0, vb=b[rawAHSortCol]||0;
-      if(va!==vb) return rawAHSortAsc?va-vb:vb-va;
-      return (a.name||'').localeCompare(b.name||'');
-    });
-  }
-
-  const labels = {total:'Total',leq15:'≤15min',gt15:'>15min',excessive:'Excessive',weekendViol:'Wknd+Hol'};
-  sortCols.forEach(col=>{
-    const th = document.getElementById('raw-ah-th-'+col);
-    if(!th) return;
-    th.textContent = labels[col] + (rawAHSortCol===col ? (rawAHSortAsc?' ▲':' ▼') : '');
-  });
-
-  document.getElementById('raw-ah-rc').textContent = `${rows.length.toLocaleString()} records`;
+  const data = window.RAW_AH; if(!data) return;
+  let rows = rawFilterRows(data,'raw-ah-flt-tower','msel-raw-ah-proj-list','msel-raw-ah-mgr-list','raw-ah-flt-mon','raw-ah-flt-name');
+  // Sort by name then date (preserve natural order)
+  rows = [...rows].sort((a,b)=> a.name.localeCompare(b.name)||a.date.localeCompare(b.date));
+  document.getElementById('raw-ah-rc').textContent = `${rows.length.toLocaleString()} rows`;
+  const LIMIT = 1000;
+  const show = rows.slice(0, LIMIT);
   const tbody = document.getElementById('tbl-raw-ah-body');
-  const show = rows.slice(0, 500);
-  tbody.innerHTML = show.map(r=>{
-    const mLabel = M[MY.indexOf(r.my)]||r.my;
-    return `<tr>
-      <td>${r.name}</td>
-      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
-      <td>${r.project}</td>
-      <td>${r.tower||'—'}</td>
-      <td>${mLabel}</td>
-      <td>${r.total}</td><td>${r.leq15||0}</td><td>${r.gt15||0}</td><td>${r.excessive||0}</td><td>${r.weekendViol||0}</td>
-      <td>${ahCatBadge(r.total)}</td>
-    </tr>`;
-  }).join('');
-  if(rows.length>500) tbody.innerHTML+=`<tr><td colspan="11" style="color:#57606a;text-align:center">…and ${(rows.length-500).toLocaleString()} more rows. Use filters to narrow results.</td></tr>`;
+  tbody.innerHTML = show.map(r=>`<tr>
+    <td>${h(r.name)}</td><td style="font-size:10px;color:#57606a">${h(r.serial)}</td>
+    <td style="font-size:10px;color:#57606a">${h(r.mgr)}</td><td style="font-size:10px;color:#57606a">${h(r.mgr2)}</td>
+    <td>${h(r.project)}</td><td>${h(r.tower)}</td>
+    <td style="white-space:nowrap">${h(r.date)}</td><td>${h(r.weekday)}</td>
+    <td style="white-space:nowrap;font-family:monospace;font-size:11px">${h(r.timeRegs)}</td>
+    <td>${h(r.expected)}</td><td>${h(r.regular)}</td><td>${h(r.additional)}</td>
+    <td>${h(r.weeklyRest)}</td><td>${h(r.holiday)}</td>
+    <td>${h(r.worked)}</td><td>${h(r.accredited)}</td><td>${h(r.standby)}</td>
+    <td><strong>${h(r.total)}</strong></td>
+    <td>${h(r.maxAdditional)}</td><td>${h(r.excessAdditional)}</td>
+    <td>${r.ate15min==='Yes'?'<span class="bc yellow">Yes</span>':h(r.ate15min)}</td>
+    <td>${r.weekendHolidays==='Issue'?'<span class="bc red">Issue</span>':h(r.weekendHolidays)||'—'}</td>
+    <td style="font-size:10px">${h(r.hrsVolumeRange)}</td>
+    <td style="font-size:10px">${h(r.costCenter)}</td><td style="font-size:10px">${h(r.businessUnit)}</td>
+    <td style="font-size:10px">${h(r.my)}</td>
+  </tr>`).join('');
+  if(rows.length>LIMIT) tbody.innerHTML+=`<tr><td colspan="26" style="color:#57606a;text-align:center;padding:10px">…and ${(rows.length-LIMIT).toLocaleString()} more rows. Use filters to narrow.</td></tr>`;
 }
 
-// ── CONS sub-tab ──────────────────────────────────────────────────────────────
+// ── CONS Raw ──────────────────────────────────────────────────────────────────
 function buildRawCons(){
-  if(!CONS_EMP || !CONS_EMP.length) return;
-  populateRawConsDropdowns();
+  if(_rawConsLoaded){ _readyRawCons(); return; }
+  loadRawScript('brazil-labor-raw-cons.js', ()=>{
+    _rawConsLoaded = true;
+    _readyRawCons();
+  });
+}
+function _readyRawCons(){
+  const data = window.RAW_CONS;
+  if(!data){ document.getElementById('raw-cons-loader').textContent='⚠️ Raw CONS data file not found.'; return; }
+  document.getElementById('raw-cons-loader').style.display = 'none';
+  document.getElementById('raw-cons-filt-bar').style.display = 'flex';
+  if(!_rawConsDropdownsPopulated){
+    _rawConsDropdownsPopulated = true;
+    rawPopulateDropdowns(data,'raw-cons-flt-tower','msel-raw-cons-proj-list','msel-raw-cons-proj-btn',
+      'msel-raw-cons-mgr-list','msel-raw-cons-mgr-btn','raw-cons-flt-mon',
+      ()=>{ refreshRawConsProjDropdown(); renderRawCons(); },
+      renderRawCons, renderRawCons);
+  }
   renderRawCons();
 }
-
-function populateRawConsDropdowns(){
-  if(_rawConsDropdownsPopulated) return;
-  _rawConsDropdownsPopulated = true;
-  const towers = [...new Set(CONS_EMP.map(r=>r.tower).filter(Boolean))].sort();
-  const tSel = document.getElementById('raw-cons-flt-tower');
-  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o); });
-  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById('raw-cons-flt-mon').appendChild(o); });
-  refreshRawConsProjDropdown();
-  tSel.onchange = ()=>{ refreshRawConsProjDropdown(); renderRawCons(); };
-  document.getElementById('raw-cons-flt-mon').onchange = renderRawCons;
-}
-
 function refreshRawConsProjDropdown(){
-  const tower = document.getElementById('raw-cons-flt-tower').value;
-  let subset = tower ? CONS_EMP.filter(r=>r.tower===tower) : CONS_EMP;
-  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
-  msPopulate('msel-raw-cons-proj-list','msel-raw-cons-proj-btn',
-    projs.map(p=>({value:p,label:p})),
-    ()=>{ refreshRawConsMgrDropdown(); renderRawCons(); },
-    'All Projects');
-  refreshRawConsMgrDropdown();
+  if(!window.RAW_CONS) return;
+  rawRefreshProj(window.RAW_CONS,'raw-cons-flt-tower','msel-raw-cons-proj-list','msel-raw-cons-proj-btn',
+    'msel-raw-cons-mgr-list','msel-raw-cons-mgr-btn',renderRawCons,renderRawCons);
 }
-
-function refreshRawConsMgrDropdown(){
-  const tower = document.getElementById('raw-cons-flt-tower').value;
-  const projs = msGetValues('msel-raw-cons-proj-list');
-  let subset = CONS_EMP;
-  if(tower) subset = subset.filter(r=>r.tower===tower);
-  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
-  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
-  msPopulate('msel-raw-cons-mgr-list','msel-raw-cons-mgr-btn',
-    mgrs.map(m=>({value:m,label:m})),
-    renderRawCons,
-    'All Managers');
-}
-
-function toggleRawConsSort(col){
-  if(rawConsSortCol===col){ rawConsSortAsc=!rawConsSortAsc; }
-  else { rawConsSortCol=col; rawConsSortAsc=false; }
-  renderRawCons();
-}
-
 function renderRawCons(){
-  if(!CONS_EMP) return;
-  const tower = document.getElementById('raw-cons-flt-tower').value;
-  const projs = msGetValues('msel-raw-cons-proj-list');
-  const mgrs  = msGetValues('msel-raw-cons-mgr-list');
-  const mon   = document.getElementById('raw-cons-flt-mon').value;
-  const name  = (document.getElementById('raw-cons-flt-name').value||'').toLowerCase();
-  let rows = CONS_EMP;
-  if(tower) rows = rows.filter(r=>r.tower===tower);
-  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
-  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
-  if(mon)  rows = rows.filter(r=>r.my===mon);
-  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
-
-  rows = [...rows].sort((a,b)=>{
-    const va=a[rawConsSortCol]||0, vb=b[rawConsSortCol]||0;
-    if(va!==vb) return rawConsSortAsc?va-vb:vb-va;
-    return (a.name||'').localeCompare(b.name||'');
-  });
-
-  ['total','unique'].forEach(col=>{
-    const th = document.getElementById('raw-cons-th-'+col);
-    if(!th) return;
-    const lbl = col==='total'?'Occurrences':'Unique';
-    th.textContent = lbl + (rawConsSortCol===col ? (rawConsSortAsc?' ▲':' ▼') : '');
-  });
-
-  document.getElementById('raw-cons-rc').textContent = `${rows.length.toLocaleString()} records`;
+  const data = window.RAW_CONS; if(!data) return;
+  let rows = rawFilterRows(data,'raw-cons-flt-tower','msel-raw-cons-proj-list','msel-raw-cons-mgr-list','raw-cons-flt-mon','raw-cons-flt-name');
+  rows = [...rows].sort((a,b)=> a.name.localeCompare(b.name)||a.date.localeCompare(b.date));
+  document.getElementById('raw-cons-rc').textContent = `${rows.length.toLocaleString()} rows`;
+  const LIMIT = 1000;
+  const show = rows.slice(0, LIMIT);
   const tbody = document.getElementById('tbl-raw-cons-body');
-  const show = rows.slice(0, 500);
-  tbody.innerHTML = show.map(r=>{
-    const mLabel = M[MY.indexOf(r.my)]||r.my;
-    return `<tr>
-      <td>${r.name}</td>
-      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
-      <td>${r.project}</td>
-      <td>${r.tower||'—'}</td>
-      <td>${mLabel}</td>
-      <td>${r.total}</td>
-      <td>${r.unique>0?`<span class="bc yellow">${r.unique}</span>`:0}</td>
-    </tr>`;
-  }).join('');
-  if(rows.length>500) tbody.innerHTML+=`<tr><td colspan="7" style="color:#57606a;text-align:center">…and ${(rows.length-500).toLocaleString()} more rows. Use filters to narrow results.</td></tr>`;
+  tbody.innerHTML = show.map(r=>`<tr>
+    <td>${h(r.name)}</td><td style="font-size:10px;color:#57606a">${h(r.serial)}</td>
+    <td style="font-size:10px;color:#57606a">${h(r.mgr)}</td><td style="font-size:10px;color:#57606a">${h(r.mgr2)}</td>
+    <td>${h(r.project)}</td><td>${h(r.tower)}</td>
+    <td style="white-space:nowrap">${h(r.date)}</td><td>${h(r.weekday)}</td>
+    <td style="white-space:nowrap;font-family:monospace;font-size:11px">${h(r.timeRegs)}</td>
+    <td>${h(r.expected)}</td><td>${h(r.regular)}</td><td>${h(r.additional)}</td>
+    <td>${h(r.weeklyRest)}</td><td>${h(r.holiday)}</td>
+    <td>${h(r.worked)}</td><td>${h(r.accredited)}</td><td>${h(r.standby)}</td>
+    <td><strong>${h(r.total)}</strong></td>
+    <td>${h(r.workDays)}</td><td>${h(r.maxWorkDays)}</td><td>${h(r.excessDays)}</td>
+    <td style="font-size:10px">${h(r.costCenter)}</td><td style="font-size:10px">${h(r.businessUnit)}</td>
+    <td>${r.unique==='Yes'?'<span class="bc yellow">Yes</span>':'—'}</td>
+    <td style="font-size:10px">${h(r.my)}</td>
+  </tr>`).join('');
+  if(rows.length>LIMIT) tbody.innerHTML+=`<tr><td colspan="25" style="color:#57606a;text-align:center;padding:10px">…and ${(rows.length-LIMIT).toLocaleString()} more rows. Use filters to narrow.</td></tr>`;
 }
 
-// ── RBW sub-tab ───────────────────────────────────────────────────────────────
+// ── RBW Raw ───────────────────────────────────────────────────────────────────
 function buildRawRbw(){
-  if(!RBW_EMP || !RBW_EMP.length) return;
-  populateRawRbwDropdowns();
+  if(_rawRbwLoaded){ _readyRawRbw(); return; }
+  loadRawScript('brazil-labor-raw-rbw.js', ()=>{
+    _rawRbwLoaded = true;
+    _readyRawRbw();
+  });
+}
+function _readyRawRbw(){
+  const data = window.RAW_RBW;
+  if(!data){ document.getElementById('raw-rbw-loader').textContent='⚠️ Raw RBW data file not found.'; return; }
+  document.getElementById('raw-rbw-loader').style.display = 'none';
+  document.getElementById('raw-rbw-filt-bar').style.display = 'flex';
+  if(!_rawRbwDropdownsPopulated){
+    _rawRbwDropdownsPopulated = true;
+    rawPopulateDropdowns(data,'raw-rbw-flt-tower','msel-raw-rbw-proj-list','msel-raw-rbw-proj-btn',
+      'msel-raw-rbw-mgr-list','msel-raw-rbw-mgr-btn','raw-rbw-flt-mon',
+      ()=>{ refreshRawRbwProjDropdown(); renderRawRbw(); },
+      renderRawRbw, renderRawRbw);
+  }
   renderRawRbw();
 }
-
-function populateRawRbwDropdowns(){
-  if(_rawRbwDropdownsPopulated) return;
-  _rawRbwDropdownsPopulated = true;
-  const towers = [...new Set(RBW_EMP.map(r=>r.tower).filter(Boolean))].sort();
-  const tSel = document.getElementById('raw-rbw-flt-tower');
-  towers.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; tSel.appendChild(o); });
-  MY.forEach((my,i)=>{ const o=document.createElement('option'); o.value=my; o.textContent=M[i]; document.getElementById('raw-rbw-flt-mon').appendChild(o); });
-  refreshRawRbwProjDropdown();
-  tSel.onchange = ()=>{ refreshRawRbwProjDropdown(); renderRawRbw(); };
-  document.getElementById('raw-rbw-flt-mon').onchange = renderRawRbw;
-}
-
 function refreshRawRbwProjDropdown(){
-  const tower = document.getElementById('raw-rbw-flt-tower').value;
-  let subset = tower ? RBW_EMP.filter(r=>r.tower===tower) : RBW_EMP;
-  const projs = [...new Set(subset.map(r=>r.project).filter(Boolean))].sort();
-  msPopulate('msel-raw-rbw-proj-list','msel-raw-rbw-proj-btn',
-    projs.map(p=>({value:p,label:p})),
-    ()=>{ refreshRawRbwMgrDropdown(); renderRawRbw(); },
-    'All Projects');
-  refreshRawRbwMgrDropdown();
+  if(!window.RAW_RBW) return;
+  rawRefreshProj(window.RAW_RBW,'raw-rbw-flt-tower','msel-raw-rbw-proj-list','msel-raw-rbw-proj-btn',
+    'msel-raw-rbw-mgr-list','msel-raw-rbw-mgr-btn',renderRawRbw,renderRawRbw);
 }
-
-function refreshRawRbwMgrDropdown(){
-  const tower = document.getElementById('raw-rbw-flt-tower').value;
-  const projs = msGetValues('msel-raw-rbw-proj-list');
-  let subset = RBW_EMP;
-  if(tower) subset = subset.filter(r=>r.tower===tower);
-  if(projs.length) subset = subset.filter(r=>projs.includes(r.project));
-  const mgrs = [...new Set(subset.map(r=>r.mgr).filter(Boolean))].sort();
-  msPopulate('msel-raw-rbw-mgr-list','msel-raw-rbw-mgr-btn',
-    mgrs.map(m=>({value:m,label:m})),
-    renderRawRbw,
-    'All Managers');
-}
-
-function toggleRawRbwSort(col){
-  if(rawRbwSortCol===col){ rawRbwSortAsc=!rawRbwSortAsc; }
-  else { rawRbwSortCol=col; rawRbwSortAsc=false; }
-  renderRawRbw();
-}
-
 function renderRawRbw(){
-  if(!RBW_EMP) return;
-  const tower = document.getElementById('raw-rbw-flt-tower').value;
-  const projs = msGetValues('msel-raw-rbw-proj-list');
-  const mgrs  = msGetValues('msel-raw-rbw-mgr-list');
-  const mon   = document.getElementById('raw-rbw-flt-mon').value;
-  const name  = (document.getElementById('raw-rbw-flt-name').value||'').toLowerCase();
-  let rows = RBW_EMP;
-  if(tower) rows = rows.filter(r=>r.tower===tower);
-  if(projs.length) rows = rows.filter(r=>projs.includes(r.project));
-  if(mgrs.length)  rows = rows.filter(r=>mgrs.includes(r.mgr));
-  if(mon)  rows = rows.filter(r=>r.my===mon);
-  if(name) rows = rows.filter(r=>(r.name||'').toLowerCase().includes(name));
-
-  rows = [...rows].sort((a,b)=>{
-    const va=a[rawRbwSortCol]||0, vb=b[rawRbwSortCol]||0;
-    if(va!==vb) return rawRbwSortAsc?va-vb:vb-va;
-    return (a.name||'').localeCompare(b.name||'');
-  });
-
-  ['total','unique'].forEach(col=>{
-    const th = document.getElementById('raw-rbw-th-'+col);
-    if(!th) return;
-    const lbl = col==='total'?'Occurrences':'Unique';
-    th.textContent = lbl + (rawRbwSortCol===col ? (rawRbwSortAsc?' ▲':' ▼') : '');
-  });
-
-  document.getElementById('raw-rbw-rc').textContent = `${rows.length.toLocaleString()} records`;
+  const data = window.RAW_RBW; if(!data) return;
+  let rows = rawFilterRows(data,'raw-rbw-flt-tower','msel-raw-rbw-proj-list','msel-raw-rbw-mgr-list','raw-rbw-flt-mon','raw-rbw-flt-name');
+  rows = [...rows].sort((a,b)=> a.name.localeCompare(b.name)||a.date.localeCompare(b.date));
+  document.getElementById('raw-rbw-rc').textContent = `${rows.length.toLocaleString()} rows`;
+  const LIMIT = 1000;
+  const show = rows.slice(0, LIMIT);
   const tbody = document.getElementById('tbl-raw-rbw-body');
-  const show = rows.slice(0, 500);
-  tbody.innerHTML = show.map(r=>{
-    const mLabel = M[MY.indexOf(r.my)]||r.my;
-    return `<tr>
-      <td>${r.name}</td>
-      <td style="font-size:11px;color:#57606a">${r.mgr||'—'}</td>
-      <td>${r.project}</td>
-      <td>${r.tower||'—'}</td>
-      <td>${mLabel}</td>
-      <td>${r.total}</td>
-      <td>${r.unique>0?`<span class="bc yellow">${r.unique}</span>`:0}</td>
-    </tr>`;
-  }).join('');
-  if(rows.length>500) tbody.innerHTML+=`<tr><td colspan="7" style="color:#57606a;text-align:center">…and ${(rows.length-500).toLocaleString()} more rows. Use filters to narrow results.</td></tr>`;
+  tbody.innerHTML = show.map(r=>`<tr>
+    <td>${h(r.name)}</td><td style="font-size:10px;color:#57606a">${h(r.serial)}</td>
+    <td style="font-size:10px;color:#57606a">${h(r.mgr)}</td><td style="font-size:10px;color:#57606a">${h(r.mgr2)}</td>
+    <td>${h(r.project)}</td><td>${h(r.tower)}</td>
+    <td style="white-space:nowrap">${h(r.date)}</td><td>${h(r.weekday)}</td>
+    <td style="white-space:nowrap;font-family:monospace;font-size:11px">${h(r.timeRegs)}</td>
+    <td>${h(r.expected)}</td><td>${h(r.regular)}</td><td>${h(r.additional)}</td>
+    <td>${h(r.weeklyRest)}</td><td>${h(r.holiday)}</td>
+    <td>${h(r.worked)}</td><td>${h(r.accredited)}</td><td>${h(r.standby)}</td>
+    <td><strong>${h(r.total)}</strong></td>
+    <td style="white-space:nowrap;font-family:monospace;font-size:11px">${h(r.firstRegister)}</td>
+    <td style="white-space:nowrap;font-family:monospace;font-size:11px">${h(r.lastRegisterPrevDay)}</td>
+    <td>${h(r.rest)}</td><td>${h(r.minRest)}</td>
+    <td>${r.missingRest&&r.missingRest!=='0:00'?`<span class="bc red">${h(r.missingRest)}</span>`:h(r.missingRest)||'—'}</td>
+    <td style="font-size:10px">${h(r.range)}</td>
+    <td style="font-size:10px">${h(r.costCenter)}</td><td style="font-size:10px">${h(r.businessUnit)}</td>
+    <td>${r.unique==='Yes'?'<span class="bc yellow">Yes</span>':'—'}</td>
+    <td style="font-size:10px">${h(r.my)}</td>
+  </tr>`).join('');
+  if(rows.length>LIMIT) tbody.innerHTML+=`<tr><td colspan="28" style="color:#57606a;text-align:center;padding:10px">…and ${(rows.length-LIMIT).toLocaleString()} more rows. Use filters to narrow.</td></tr>`;
 }
 
 
