@@ -1372,14 +1372,13 @@ function renderHeatmap(ahOverride, consOverride, rbwOverride){
     ? WOW_PREV : null;
 
   // Formats a numeric delta for display.
-  // higherIsBad=true → increase = red, decrease = green (violation metrics)
-  // higherIsBad=false → increase = green, decrease = red (≤15min compliance)
+  // increase = red, decrease = green (regardless of metric direction)
   function wowDelta(curr, prev, decimals, higherIsBad){
     if(curr==null || prev==null) return {txt:'—', cls:''};
     const d = curr - prev;
     if(d === 0) return {txt:'—', cls:''};
     const sign  = d > 0 ? '▲ +' : '▼ ';
-    const color = (d > 0) === higherIsBad ? 'color:#da1e28' : 'color:#24a148';
+    const color = d > 0 ? 'color:#da1e28' : 'color:#24a148';
     return {txt: sign + Math.abs(d).toFixed(decimals) + (decimals >= 0 ? '%' : ''), cls: color};
   }
   function wowRaw(curr, prev, higherIsBad){
@@ -1387,7 +1386,7 @@ function renderHeatmap(ahOverride, consOverride, rbwOverride){
     const d = curr - prev;
     if(d === 0) return {txt:'—', cls:''};
     const sign  = d > 0 ? '▲ +' : '▼ ';
-    const color = (d > 0) === higherIsBad ? 'color:#da1e28' : 'color:#24a148';
+    const color = d > 0 ? 'color:#da1e28' : 'color:#24a148';
     return {txt: sign + Math.abs(d), cls: color};
   }
 
